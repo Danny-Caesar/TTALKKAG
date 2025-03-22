@@ -16,7 +16,7 @@
 # 2. Team Members (팀원 및 팀 소개)
 | 김동건 | 강유경 | 장혜림 | 홍우민 | 고근호 | 김예람 |
 |:------:|:------:|:------:|:------:|:------:|:------:|
-| <img src="https://avatars.githubusercontent.com/u/125544913?v=4" alt="" width="150"> | <img src="https://avatars.githubusercontent.com/u/202641007?v=4" alt="" width="150"> | <img src="https://avatars.githubusercontent.com/u/202640692?v=4" alt="" width="150"> | <img src="https://avatars.githubusercontent.com/u/155062635?v=4" alt="" width="150"> | <img src="https://avatars.githubusercontent.com/u/95072015?v=4" alt="" width="150"> | <img src="https://avatars.githubusercontent.com/u/202640579?v=4" alt="" width="150"> |
+| <img src="https://avatars.githubusercontent.com/u/125544913?v=4" alt="김동건" width="150"> | <img src="https://avatars.githubusercontent.com/u/202641007?v=4" alt="강유경" width="150"> | <img src="https://avatars.githubusercontent.com/u/202640692?v=4" alt="장혜림" width="150"> | <img src="https://avatars.githubusercontent.com/u/155062635?v=4" alt="홍우민" width="150"> | <img src="https://avatars.githubusercontent.com/u/95072015?v=4" alt="고근호" width="150"> | <img src="https://avatars.githubusercontent.com/u/202640579?v=4" alt="김예람" width="150"> |
 | Arduino, Raspberry Pi | Arduino, Raspberry Pi | RN | RN | Spring | Design |
 | [GitHub](https://github.com/Danny-Caesar) | [GitHub](https://github.com/dbrud919) | [GitHub](https://github.com/hyerim819) | [GitHub](https://github.com/hongwoomin02) | [GitHub](https://github.com/kokeunho) | [GitHub](https://github.com/rlaexram) |
 
@@ -41,59 +41,55 @@
 - **클라이언트 조작 및 설정**:
   - 각 클라이언트의 개별 페이지는 클라이언트의 정보를 표시하거나 변경할 수 있습니다.
   - 클라이언트를 조작하고 설정할 수 있습니다.
-<!--
+
 <br/>
 <br/>
 
 # 4. Tasks & Responsibilities (작업 및 역할 분담)
 |  |  |  |
 |-----------------|-----------------|-----------------|
-| 이동규    |  <img src="https://github.com/user-attachments/assets/c1c2b1e3-656d-4712-98ab-a15e91efa2da" alt="이동규" width="100"> | <ul><li>프로젝트 계획 및 관리</li><li>팀 리딩 및 커뮤니케이션</li><li>커스텀훅 개발</li></ul>     |
-| 신유승   |  <img src="https://github.com/user-attachments/assets/78ec4937-81bb-4637-975d-631eb3c4601e" alt="신유승" width="100">| <ul><li>메인 페이지 개발</li><li>동아리 만들기 페이지 개발</li><li>커스텀훅 개발</li></ul> |
-| 김나연   |  <img src="https://github.com/user-attachments/assets/78ce1062-80a0-4edb-bf6b-5efac9dd992e" alt="김나연" width="100">    |<ul><li>홈 페이지 개발</li><li>로그인 페이지 개발</li><li>동아리 찾기 페이지 개발</li><li>동아리 프로필 페이지 개발</li><li>커스텀훅 개발</li></ul>  |
-| 이승준    |  <img src="https://github.com/user-attachments/assets/beea8c64-19de-4d91-955f-ed24b813a638" alt="이승준" width="100">    | <ul><li>회원가입 페이지 개발</li><li>마이 프로필 페이지 개발</li><li>커스텀훅 개발</li></ul>    |
+| 김동건   |  <img src="https://avatars.githubusercontent.com/u/125544913?v=4" alt="" width="100">| <ul><li>프로젝트 계획 및 관리</li><li>MQTT 브로커 개발</li><li>다이얼 액추에이터 개발</li></ul> |
+| 강유경   |  <img src="https://avatars.githubusercontent.com/u/202641007?v=4" alt="" width="100">| <ul><li>버튼 클리커 개발</li><li>개폐 감지 센서 개발</li></ul> |
+| 장혜림   |  <img src="https://avatars.githubusercontent.com/u/202640692?v=4" alt="" width="100">| <ul><li>디바이스 목록 페이지 개발</li></ul> |
+| 홍우민   |  <img src="https://avatars.githubusercontent.com/u/155062635?v=4" alt="" width="100">| <ul><li>트리거 목록 페이지 개발</li><li>디바이스 상세 페이지 개발</li></ul> |
+| 고근호   |  <img src="https://avatars.githubusercontent.com/u/95072015?v=4" alt="" width="100">| <ul><li>회원가입 페이지 개발</li><li>마이 프로필 페이지 개발</li></ul> |
+| 김예람   |  <img src="https://avatars.githubusercontent.com/u/202640579?v=4" alt="" width="100">| <ul><li>앱 페이지 전반 디자인</li><li>로고 및 배너 디자인</li></ul> |
 
 <br/>
 <br/>
 
 # 5. Technology Stack (기술 스택)
-## 5.1 Language
+## 5.1 Development
 |  |  |
 |-----------------|-----------------|
-| HTML5    |<img src="https://github.com/user-attachments/assets/2e122e74-a28b-4ce7-aff6-382959216d31" alt="HTML5" width="100">| 
-| CSS3    |   <img src="https://github.com/user-attachments/assets/c531b03d-55a3-40bf-9195-9ff8c4688f13" alt="CSS3" width="100">|
-| Javascript    |  <img src="https://github.com/user-attachments/assets/4a7d7074-8c71-48b4-8652-7431477669d1" alt="Javascript" width="100"> | 
+| Arduino    |  <img src="" alt="Arduino" width="100"> | 
+| Raspberry Pi    |  <img src="" alt="RPi" width="100"> | 
+| React Native    |<img src="" alt="RN" width="100">| 
+| Spring    |   <img src="" alt="Spring" width="100">|
 
 <br/>
 
-## 5.2 Frotend
-|  |  |  |
-|-----------------|-----------------|-----------------|
-| React    |  <img src="https://github.com/user-attachments/assets/e3b49dbb-981b-4804-acf9-012c854a2fd2" alt="React" width="100"> | 18.3.1    |
-| StyledComponents    |  <img src="https://github.com/user-attachments/assets/c9b26078-5d79-40cc-b120-69d9b3882786" alt="StyledComponents" width="100">| 6.1.12   |
-| MaterialUI    |  <img src="https://github.com/user-attachments/assets/75a46fa7-ebc0-4a9d-b648-c589f87c4b55" alt="MUI" width="100">    | 5.0.0  |
-| DayJs    |  <img src="https://github.com/user-attachments/assets/3632d7d6-8d43-4dd5-ba7a-501a2bc3a3e4" alt="DayJs" width="100">    | 1.11.12    |
-
-<br/>
-
-## 5.3 Backend
-|  |  |  |
-|-----------------|-----------------|-----------------|
-| Firebase    |  <img src="https://github.com/user-attachments/assets/1694e458-9bb0-4a0b-8fe6-8efc6e675fa1" alt="Firebase" width="100">    | 10.12.5    |
-
-<br/>
-
-## 5.4 Cooperation
+## 5.2 Cooperation
 |  |  |
 |-----------------|-----------------|
 | Git    |  <img src="https://github.com/user-attachments/assets/483abc38-ed4d-487c-b43a-3963b33430e6" alt="git" width="100">    |
-| Git Kraken    |  <img src="https://github.com/user-attachments/assets/32c615cb-7bc0-45cd-91ea-0d1450bfc8a9" alt="git kraken" width="100">    |
 | Notion    |  <img src="https://github.com/user-attachments/assets/34141eb9-deca-416a-a83f-ff9543cc2f9a" alt="Notion" width="100">    |
+| Figma    |  <img src="" alt="Figma" width="100">    |
 
 <br/>
 
 # 6. Project Structure (프로젝트 구조)
 ```plaintext
+project/
+├── broker/
+├── client/
+|   ├── subscriber/
+│   └── publisher/
+├── .gitignore               # Git 무시 파일 목록
+└── README.md                # 프로젝트 개요 및 사용법
+```
+
+<!--
 project/
 ├── public/
 │   ├── index.html           # HTML 템플릿 파일
@@ -111,8 +107,9 @@ project/
 │   package.json         # 프로젝트 종속성 및 스크립트 정의
 ├── .gitignore               # Git 무시 파일 목록
 └── README.md                # 프로젝트 개요 및 사용법
-```
+--!>
 
+<!--
 <br/>
 <br/>
 
