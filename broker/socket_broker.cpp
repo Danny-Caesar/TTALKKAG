@@ -9,8 +9,8 @@ socket_broker::socket_broker(boost::asio::io_context &io_context)
         boost::asio::ip::tcp::endpoint(
             // IPv4
             boost::asio::ip::tcp::v4(),
-            // broker port
-            1883
+            // MQTT port
+            atoi(std::getenv("MQTT_PORT"))
         )
     ),
     _socket(io_context)
