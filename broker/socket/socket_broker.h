@@ -1,8 +1,9 @@
+#pragma once
+
 #include <unistd.h>
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 
-#pragma once
 
 class socket_broker
 {
