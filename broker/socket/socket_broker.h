@@ -45,8 +45,8 @@ class socket_broker
         void accept_complete(const boost::system::error_code& error);
     
     private:
-        int _sequence_number;
-        char _receive_buffer[buffer_size];
+        // int _sequence_number;
+        uint8_t _receive_buffer[buffer_size];
 
         boost::asio::ip::tcp::acceptor _acceptor;
         boost::asio::ip::tcp::socket _socket;

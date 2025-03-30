@@ -1,5 +1,6 @@
 #include <iostream>
 #include "socket_broker.h"
+#include "../packet/mqtt_control_packet.h"
 
 // constructor
 socket_broker::socket_broker(boost::asio::io_context &io_context)
@@ -95,7 +96,7 @@ void socket_broker::read_complete(
     else
     {
         auto transactor = [this](
-            const void* data,
+            const uint8_t* data,
             const size_t size
         )
         {
@@ -105,6 +106,7 @@ void socket_broker::read_complete(
             {
 
                 // receive packet data parsing.
+                std::unique_ptr<mqtt_control_packet> cp = mqtt_control_packet::parse(data, size);
                 
             }
 
