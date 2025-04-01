@@ -100,21 +100,13 @@ void socket_broker::read_complete(
             const size_t size
         )
         {
-            bool send_empty_reply = true;
-
             if(data && size)
             {
 
                 // receive packet data parsing.
-                std::unique_ptr<mqtt_control_packet> cp = mqtt_control_packet::parse(data, size);
+                std::unique_ptr<mqtt_control_packet> control_packet = mqtt_control_packet::parse(data, size);
                 
-            }
-
-            if(send_empty_reply)
-            {
-                // basic_socket_packet<> reply_packet;
-                char* reply_packet;
-                write(&reply_packet, sizeof(reply_packet));
+                if(control_packet) control_packet->handle(*this);
             }
         };
 
