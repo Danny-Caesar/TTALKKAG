@@ -2,7 +2,8 @@
 
 #include <stdint.h>
 
-enum class mqtt_packet_type : uint8_t {
+enum class mqtt_packet_type : uint8_t
+{
     CONNECT     = 1,
     CONNACK     = 2,
     PUBLISH     = 3,

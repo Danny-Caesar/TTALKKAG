@@ -6,7 +6,6 @@
 #include "connack_packet.h"
 #include "publish_packet.h"
 
-// Parse byte stream to a packet format.
 std::unique_ptr<mqtt_control_packet> mqtt_control_packet::mqtt_control_packet::parse(const uint8_t* data, size_t size)
 {
     // Throw runtime error if size is too small.
@@ -25,11 +24,11 @@ std::unique_ptr<mqtt_control_packet> mqtt_control_packet::mqtt_control_packet::p
     {
         case mqtt_packet_type::CONNECT:
             return connect_packet::parse(payload, header.remaining_length);
-        case mqtt_packet_type::CONNACK:
-            return NULL;
         case mqtt_packet_type::PUBLISH:
             return publish_packet::parse(payload, header.remaining_length);
-        // Other parse functions...
+        case mqtt_packet_type::CONNACK:
+        case mqtt_packet_type::DISCONNECT:
+            return NULL;
         default:
             throw std::runtime_error("Unsupported packet type");
     }
