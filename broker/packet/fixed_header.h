@@ -18,5 +18,5 @@ struct fixed_header {
     // Read remaining length from byte stream.
     std::pair<uint32_t, size_t> decode_remaining_length(const uint8_t* data, size_t size);
     // Print fields of fixed header.
-    void print_fixed_header();
+    void debug();
 };

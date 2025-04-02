@@ -41,15 +41,16 @@ fixed_header fixed_header::parse(const uint8_t* data, size_t size)
         header_length
     };
 
-    f_header.print_fixed_header();
+    f_header.debug();
 
     return f_header;
 }
 
-void fixed_header::print_fixed_header()
+void fixed_header::debug()
 {
-    std::cout<<"type: "             << (int) this->packet_type << '\n';
-    std::cout<<"flags: "            << (int) this->flags << '\n';
-    std::cout<<"remaining_length: " << this->remaining_length << '\n';
-    std::cout<<"header_length: "    << this->header_length << '\n';
+    std::cout << "----Fixed Header----\n";
+    std::cout << "type: "             << (int) this->packet_type << '\n';
+    std::cout << "flags: "            << (int) this->flags       << '\n';
+    std::cout << "remaining_length: " << this->remaining_length  << '\n';
+    std::cout << "header_length: "    << this->header_length     << "\n\n";
 }
