@@ -1,8 +1,9 @@
+#pragma once
+
 #include <unistd.h>
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 
-#pragma once
 
 class socket_broker
 {
@@ -20,6 +21,11 @@ class socket_broker
         }
 
         void start_accept();
+        
+        void write(
+            const void* data,
+            const size_t size
+        );
     
     private:
         void read_complete(
@@ -27,10 +33,6 @@ class socket_broker
             size_t bytes_received
         );
 
-        void write(
-            const void* data,
-            const size_t size
-        );
 
         void write_complete(
             const boost::system::error_code&,
@@ -44,8 +46,8 @@ class socket_broker
         void accept_complete(const boost::system::error_code& error);
     
     private:
-        int _sequence_number;
-        char _receive_buffer[buffer_size];
+        // int _sequence_number;
+        uint8_t _receive_buffer[buffer_size];
 
         boost::asio::ip::tcp::acceptor _acceptor;
         boost::asio::ip::tcp::socket _socket;
