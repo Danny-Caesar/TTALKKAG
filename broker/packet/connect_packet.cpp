@@ -2,8 +2,6 @@
 #include "connack_packet.h"
 #include "socket_broker.h"
 
-#include <iostream>
-
 void connect_packet::handle(socket_broker& broker)
 {
     bool session_present = false;   // Rector after session developed

@@ -1,10 +1,9 @@
-#include <stdexcept>
-#include <iostream>
 #include "mqtt_control_packet.h"
 #include "fixed_header.h"
 #include "connect_packet.h"
 #include "connack_packet.h"
 #include "publish_packet.h"
+#include "subscribe_packet.h"
 
 std::unique_ptr<mqtt_control_packet> mqtt_control_packet::mqtt_control_packet::parse(const uint8_t* data, size_t size)
 {
@@ -26,6 +25,8 @@ std::unique_ptr<mqtt_control_packet> mqtt_control_packet::mqtt_control_packet::p
             return connect_packet::parse(payload, header.remaining_length);
         case mqtt_packet_type::PUBLISH:
             return publish_packet::parse(payload, header.remaining_length);
+        case mqtt_packet_type::SUBSCRIBE:
+            return subscribe_packet::parse(payload, header.remaining_length);
         case mqtt_packet_type::CONNACK:
         case mqtt_packet_type::DISCONNECT:
             return NULL;

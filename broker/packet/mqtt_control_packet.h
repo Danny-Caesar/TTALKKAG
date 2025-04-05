@@ -1,5 +1,7 @@
 #pragma once
 
+#include <iostream>
+#include <stdexcept>
 #include <memory>
 #include "mqtt_packet_types.h"
 

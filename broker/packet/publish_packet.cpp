@@ -1,5 +1,4 @@
 #include <stdexcept>
-#include <iostream>
 #include "publish_packet.h"
 
 std::unique_ptr<publish_packet> publish_packet::parse(const uint8_t* data, size_t size)
