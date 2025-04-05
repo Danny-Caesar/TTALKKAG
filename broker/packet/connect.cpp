@@ -1,8 +1,8 @@
-#include "connect_packet.h"
-#include "connack_packet.h"
+#include "connect.h"
+#include "connack.h"
 #include "socket_broker.h"
 
-void connect_packet::handle(socket_broker& broker)
+void connect::handle(socket_broker& broker)
 {
     bool session_present = false;   // Rector after session developed
     uint8_t return_code = 0x00;
@@ -12,15 +12,15 @@ void connect_packet::handle(socket_broker& broker)
     broker.write(buf.data(), buf.size());
 }
 
-std::unique_ptr<connect_packet> connect_packet::parse(const uint8_t* payload, size_t length)
+std::unique_ptr<connect> connect::parse(const uint8_t* payload, size_t length)
 {
     size_t index = 0;
 
     // 1. Variable header
-    connect_packet::variable_header v_header = variable_header::parse(payload, length);
+    connect::variable_header v_header = variable_header::parse(payload, length);
     index += 2 + v_header.protocol_name.size() + 1 + 1 + 2; // Protocol name len + name + level + flags + keep alive
 
-    auto packet = std::make_unique<connect_packet>();
+    auto packet = std::make_unique<connect>();
     packet->clean_session = v_header.connect_flags.clean_session;
 
     // 2. Client identifier
@@ -87,7 +87,7 @@ std::unique_ptr<connect_packet> connect_packet::parse(const uint8_t* payload, si
     return packet;
 }
 
-connect_packet::variable_header connect_packet::variable_header::parse(const uint8_t* data, size_t size)
+connect::variable_header connect::variable_header::parse(const uint8_t* data, size_t size)
 {
     size_t index = 0;
 
@@ -138,7 +138,7 @@ connect_packet::variable_header connect_packet::variable_header::parse(const uin
     return v_header;
 }
 
-void connect_packet::variable_header::debug()
+void connect::variable_header::debug()
 {
     std::cout << "----Variable Header----\n";
     std::cout << "protocol_name: "  << this->protocol_name               << '\n';

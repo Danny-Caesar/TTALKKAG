@@ -6,7 +6,7 @@
 #include <stdexcept>
 #include "mqtt_control_packet.h"
 
-class subscribe_packet : public mqtt_control_packet
+class subscribe : public mqtt_control_packet
 {
 public:
     struct variable_header
@@ -23,9 +23,9 @@ public:
     mqtt_packet_type type() const override { return mqtt_packet_type::SUBSCRIBE; };
     void handle(socket_broker& broker) override;
 
-    static std::unique_ptr<subscribe_packet> parse(const uint8_t* data, size_t size);
+    static std::unique_ptr<subscribe> parse(const uint8_t* data, size_t size);
 
-    std::unique_ptr<subscribe_packet> create(
+    std::unique_ptr<subscribe> create(
         uint16_t packet_identifier,
         std::vector<std::string> topic_filter,
         std::vector<uint8_t> qos_request

@@ -1,20 +1,20 @@
-#include "subscribe_packet.h"
+#include "subscribe.h"
 
-void subscribe_packet::handle(socket_broker& broker)
+void subscribe::handle(socket_broker& broker)
 {
     this->debug();
 }
 
-std::unique_ptr<subscribe_packet> subscribe_packet::parse(const uint8_t* data, size_t size)
+std::unique_ptr<subscribe> subscribe::parse(const uint8_t* data, size_t size)
 {
     size_t index = 0;
 
     // 1. Variable header
     if (size < 2) throw std::runtime_error("Malformed payload: Wrong variable header.");
-    subscribe_packet::variable_header v_header = subscribe_packet::variable_header::parse(data, size);
+    subscribe::variable_header v_header = subscribe::variable_header::parse(data, size);
     index += 2;
 
-    auto packet = std::make_unique<subscribe_packet>();
+    auto packet = std::make_unique<subscribe>();
     packet->v_header.packet_identifier = v_header.packet_identifier;
 
     while(index < size)
@@ -38,13 +38,13 @@ std::unique_ptr<subscribe_packet> subscribe_packet::parse(const uint8_t* data, s
     return packet;
 }
 
-std::unique_ptr<subscribe_packet> subscribe_packet::create(
+std::unique_ptr<subscribe> subscribe::create(
     uint16_t packet_identifier,
     std::vector<std::string> topic_filter,
     std::vector<uint8_t> qos_request
 )
 {
-    auto packet = std::make_unique<subscribe_packet>();
+    auto packet = std::make_unique<subscribe>();
     packet->v_header.packet_identifier = packet_identifier;
     packet->topic_filter = topic_filter;
     packet->qos_request = qos_request;
@@ -52,7 +52,7 @@ std::unique_ptr<subscribe_packet> subscribe_packet::create(
     return packet;
 }
 
-void subscribe_packet::debug()
+void subscribe::debug()
 {
     std::cout << "----Payload----\n";
     for(size_t i = 0; i < this->topic_filter.size(); i++)
@@ -63,11 +63,11 @@ void subscribe_packet::debug()
     std::cout << '\n';
 }
 
-subscribe_packet::variable_header subscribe_packet::variable_header::parse(const uint8_t* data, size_t size)
+subscribe::variable_header subscribe::variable_header::parse(const uint8_t* data, size_t size)
 {
     // 1. Packet identifier
     if (size < 2) throw std::runtime_error("Malformed varialbe header: Wrong packet identifier.");
     uint16_t packet_id = (data[0] << 8) | data[1];
 
-    return subscribe_packet::variable_header{ packet_id };
+    return subscribe::variable_header{ packet_id };
 }
