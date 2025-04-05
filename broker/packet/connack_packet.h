@@ -22,11 +22,11 @@ public:
     {
         std::vector<uint8_t> packet;
 
-        // Fixed Header
+        // 1. Fixed header
         packet.push_back(0x20);  // CONNACK (Type = 2 << 4), flags = 0
         packet.push_back(0x02);  // Remaining Length = 2
 
-        // Variable Header
+        // 2. Variable header
         uint8_t flags = v_header.session_present ? 0x01 : 0x00;
         packet.push_back(flags);        // Connect Acknowledge Flags
         packet.push_back(v_header.return_code);  // Connect Return Code
