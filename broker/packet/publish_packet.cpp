@@ -1,13 +1,13 @@
 #include <stdexcept>
-#include "publish.h"
+#include "publish_packet.h"
 
-std::unique_ptr<publish> publish::parse(const uint8_t* data, size_t size)
+std::unique_ptr<publish_packet> publish_packet::parse(const uint8_t* data, size_t size)
 {
     size_t index = 0;
-    auto packet = std::make_unique<publish>();
+    auto packet = std::make_unique<publish_packet>();
     
     // 1. Variable header
-    packet->v_header = publish::variable_header::parse(data, size);
+    packet->v_header = publish_packet::variable_header::parse(data, size);
     index += packet->v_header.topic_name.length() + 2;
 
     // 2. Message
@@ -16,12 +16,12 @@ std::unique_ptr<publish> publish::parse(const uint8_t* data, size_t size)
     return packet;
 }
 
-void publish::handle(socket_broker& broker)
+void publish_packet::handle(socket_broker& broker)
 {
     std::cout << "message: " << this->message << "\n\n";
 }
 
-publish::variable_header publish::variable_header::parse(const uint8_t* data, size_t size)
+publish_packet::variable_header publish_packet::variable_header::parse(const uint8_t* data, size_t size)
 {
     size_t index = 0;
 
@@ -40,7 +40,7 @@ publish::variable_header publish::variable_header::parse(const uint8_t* data, si
     uint16_t packet_identifier = (data[index] << 8) | data[index + 1];
     index += 2;
 
-    publish::variable_header v_header
+    publish_packet::variable_header v_header
     {
         topic_name,
         packet_identifier
@@ -51,7 +51,7 @@ publish::variable_header publish::variable_header::parse(const uint8_t* data, si
     return v_header;
 }
 
-void publish::variable_header::debug()
+void publish_packet::variable_header::debug()
 {
     std::cout << "----Variable Header----\n";
     std::cout << "topic name: "        << this->topic_name        << '\n';

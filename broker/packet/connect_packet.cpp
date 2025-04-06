@@ -1,10 +1,12 @@
-#include "connect.h"
-#include "connack.h"
+#include "connect_packet.h"
+#include "connack_packet.h"
 #include "socket_broker.h"
 
-void connect::handle(socket_broker& broker)
+void connect_packet::handle(socket_broker& broker)
 {
-    bool session_present = false;   // Rector after session developed
+    bool session_present = false;
+    if(v_header.connect_flags.clean_session)
+        session_present = false;
     uint8_t return_code = 0x00;
 
     auto connack = connack_packet::create(session_present, return_code);
@@ -12,15 +14,15 @@ void connect::handle(socket_broker& broker)
     broker.write(buf.data(), buf.size());
 }
 
-std::unique_ptr<connect> connect::parse(const uint8_t* payload, size_t length)
+std::unique_ptr<connect_packet> connect_packet::parse(const uint8_t* payload, size_t length)
 {
     size_t index = 0;
 
     // 1. Variable header
-    connect::variable_header v_header = variable_header::parse(payload, length);
+    connect_packet::variable_header v_header = variable_header::parse(payload, length);
     index += 2 + v_header.protocol_name.size() + 1 + 1 + 2; // Protocol name len + name + level + flags + keep alive
 
-    auto packet = std::make_unique<connect>();
+    auto packet = std::make_unique<connect_packet>();
     packet->clean_session = v_header.connect_flags.clean_session;
 
     // 2. Client identifier
@@ -87,7 +89,7 @@ std::unique_ptr<connect> connect::parse(const uint8_t* payload, size_t length)
     return packet;
 }
 
-connect::variable_header connect::variable_header::parse(const uint8_t* data, size_t size)
+connect_packet::variable_header connect_packet::variable_header::parse(const uint8_t* data, size_t size)
 {
     size_t index = 0;
 
@@ -106,7 +108,7 @@ connect::variable_header connect::variable_header::parse(const uint8_t* data, si
     uint8_t protocol_level = data[index++];
 
     // 4. Connect flags (1 byte)
-    if (size < index + 1) throw std::runtime_error("Malformed variable header: Wrong connect flags");
+    if (size < index + 1) throw std::runtime_error("Malformed variable header: Wrong connect_packet flags");
     uint8_t flags = data[index++];
     bool username_flag   = (flags & 0b10000000) != 0;
     bool password_flag   = (flags & 0b01000000) != 0;
@@ -138,9 +140,10 @@ connect::variable_header connect::variable_header::parse(const uint8_t* data, si
     return v_header;
 }
 
-void connect::variable_header::debug()
+void connect_packet::variable_header::debug()
 {
-    std::cout << "----Variable Header----\n";
+    std::cout << "----Connect packet----\n";
+    std::cout << "---Variable Header---\n";
     std::cout << "protocol_name: "  << this->protocol_name               << '\n';
     std::cout << "protocol_level: " << (int)this->protocol_level         << '\n';
     std::cout << "username_flag: "  << this->connect_flags.username_flag << '\n';

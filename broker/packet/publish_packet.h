@@ -3,7 +3,7 @@
 #include "mqtt_control_packet.h"
 #include <string>
 
-class publish : public mqtt_control_packet
+class publish_packet : public mqtt_control_packet
 {
 public:
     struct variable_header
@@ -19,5 +19,5 @@ public:
     mqtt_packet_type type() const override { return mqtt_packet_type::PUBLISH; }
     void handle(socket_broker& broker) override;
 
-    static std::unique_ptr<publish> parse(const uint8_t* data, size_t size);
+    static std::unique_ptr<publish_packet> parse(const uint8_t* data, size_t size);
 };
