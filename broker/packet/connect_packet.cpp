@@ -11,7 +11,6 @@ std::unique_ptr<connect_packet> connect_packet::parse(const uint8_t* payload, si
     index += 2 + v_header.protocol_name.size() + 1 + 1 + 2; // Protocol name len + name + level + flags + keep alive
 
     auto packet = std::make_unique<connect_packet>();
-    packet->clean_session = v_header.connect_flags.clean_session;
 
     // 2. Client identifier
     if (index + 2 > length) throw std::runtime_error("Malformed payload: Client ID length missing");
@@ -77,6 +76,17 @@ std::unique_ptr<connect_packet> connect_packet::parse(const uint8_t* payload, si
     return packet;
 }
 
+void connect_packet::debug()
+{
+    std::cout << "----Connect----\n";
+    v_header.debug();
+    std::cout << "client id: "    << client_id    << '\n';
+    std::cout << "will topic: "   << will_topic   << '\n';
+    std::cout << "will message: " << will_message << '\n';
+    std::cout << "user_name: "    << user_name    << '\n';
+    std::cout << "password: "     << password     << "\n\n";
+}
+
 connect_packet::variable_header connect_packet::variable_header::parse(const uint8_t* data, size_t size)
 {
     size_t index = 0;
@@ -123,14 +133,11 @@ connect_packet::variable_header connect_packet::variable_header::parse(const uin
         keep_alive
     };
 
-    v_header.debug();
-
     return v_header;
 }
 
 void connect_packet::variable_header::debug()
 {
-    std::cout << "----Connect packet----\n";
     std::cout << "---Variable Header---\n";
     std::cout << "protocol_name: "  << this->protocol_name               << '\n';
     std::cout << "protocol_level: " << (int)this->protocol_level         << '\n';

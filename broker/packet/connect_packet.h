@@ -7,7 +7,10 @@ class connect_packet : public mqtt_control_packet
 {
     public:
         std::string client_id;
-        bool clean_session;
+        std::string will_topic;
+        std::string will_message;
+        std::string user_name;
+        std::string password;
 
         struct variable_header
         {
@@ -33,6 +36,7 @@ class connect_packet : public mqtt_control_packet
         } v_header;
     public:
         mqtt_packet_type type() const override { return mqtt_packet_type::CONNECT; }
+        void debug();
 
         static std::unique_ptr<connect_packet> parse(const uint8_t* data, size_t size);
 };
