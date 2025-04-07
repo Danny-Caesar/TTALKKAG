@@ -21,11 +21,6 @@ class socket_broker
         }
 
         void start_accept();
-        
-        void write(
-            const void* data,
-            const size_t size
-        );
     
     private:
         void read_complete(
@@ -42,6 +37,11 @@ class socket_broker
         void reset();
 
         void read();
+
+        void write(
+            const void* data,
+            const size_t size
+        );
 
         void accept_complete(const boost::system::error_code& error);
     
