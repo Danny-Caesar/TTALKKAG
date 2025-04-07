@@ -33,7 +33,6 @@ class connect_packet : public mqtt_control_packet
         } v_header;
     public:
         mqtt_packet_type type() const override { return mqtt_packet_type::CONNECT; }
-        void handle(socket_broker& broker) override;
 
         static std::unique_ptr<connect_packet> parse(const uint8_t* data, size_t size);
 };

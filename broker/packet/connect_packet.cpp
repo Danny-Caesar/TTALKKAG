@@ -2,18 +2,6 @@
 #include "connack_packet.h"
 #include "socket_broker.h"
 
-void connect_packet::handle(socket_broker& broker)
-{
-    bool session_present = false;
-    if(v_header.connect_flags.clean_session)
-        session_present = false;
-    uint8_t return_code = 0x00;
-
-    auto connack = connack_packet::create(session_present, return_code);
-    auto buf = connack->serialize();
-    broker.write(buf.data(), buf.size());
-}
-
 std::unique_ptr<connect_packet> connect_packet::parse(const uint8_t* payload, size_t length)
 {
     size_t index = 0;

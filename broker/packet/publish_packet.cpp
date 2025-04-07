@@ -16,11 +16,6 @@ std::unique_ptr<publish_packet> publish_packet::parse(const uint8_t* data, size_
     return packet;
 }
 
-void publish_packet::handle(socket_broker& broker)
-{
-    std::cout << "message: " << this->message << "\n\n";
-}
-
 publish_packet::variable_header publish_packet::variable_header::parse(const uint8_t* data, size_t size)
 {
     size_t index = 0;

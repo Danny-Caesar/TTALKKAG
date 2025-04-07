@@ -1,6 +1,7 @@
 #include <iostream>
 #include "socket_broker.h"
-#include "../packet/mqtt_control_packet.h"
+#include "mqtt_control_packet.h"
+#include "packet_handler.h"
 
 // constructor
 socket_broker::socket_broker(boost::asio::io_context &io_context)
@@ -102,11 +103,10 @@ void socket_broker::read_complete(
         {
             if(data && size)
             {
-
                 // receive packet data parsing.
-                std::unique_ptr<mqtt_control_packet> control_packet = mqtt_control_packet::parse(data, size);
+                std::vector<uint8_t> reply_packet = packet_handler::handle(data, size);
                 
-                if(control_packet) control_packet->handle(*this);
+                if(!reply_packet.empty()) write(reply_packet.data(), reply_packet.size());
             }
         };
 

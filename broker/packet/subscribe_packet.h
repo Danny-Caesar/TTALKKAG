@@ -21,7 +21,6 @@ public:
     std::vector<uint8_t> qos_request;
 public:
     mqtt_packet_type type() const override { return mqtt_packet_type::SUBSCRIBE; };
-    void handle(socket_broker& broker) override;
 
     static std::unique_ptr<subscribe_packet> parse(const uint8_t* data, size_t size);
 

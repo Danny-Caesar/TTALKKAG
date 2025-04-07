@@ -16,7 +16,6 @@ public:
     std::vector<uint8_t> return_code;
 public:
     mqtt_packet_type type() const override { return mqtt_packet_type::SUBACK; }
-    void handle(socket_broker& broker) override { /* No need */ }
     std::vector<uint8_t> serialize() const
     {
         std::vector<uint8_t> packet;

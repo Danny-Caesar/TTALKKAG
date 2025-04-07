@@ -14,7 +14,6 @@ public:
 public:
 
     mqtt_packet_type type() const override { return mqtt_packet_type::CONNACK; }
-    void handle(socket_broker&) override { /* No need */ }
 
     static std::unique_ptr<connack_packet> create(bool session_present, uint8_t return_code);
 
