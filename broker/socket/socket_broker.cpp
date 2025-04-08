@@ -4,21 +4,25 @@
 #include "packet_handler.h"
 
 // constructor
-socket_broker::socket_broker(boost::asio::io_context &io_context)
-:
-    _acceptor(
-        io_context,
-        boost::asio::ip::tcp::endpoint(
-            // IPv4
-            boost::asio::ip::tcp::v4(),
-            // MQTT port
-            atoi(std::getenv("MQTT_PORT"))
-        )
-    ),
-    _socket(io_context)
+socket_broker::socket_broker(boost::asio::ip::tcp::socket socket)
+: _socket(std::move(socket))
 {
 
 }
+// socket_broker::socket_broker(boost::asio::io_context io_context)
+// : _acceptor(
+//         io_context,
+//         boost::asio::ip::tcp::endpoint(
+//             // IPv4
+//             boost::asio::ip::tcp::v4(),
+//             // MQTT port
+//             atoi(std::getenv("MQTT_PORT"))
+//         )
+//     ),
+//     _socket(io_context)
+// {
+
+// }
 
 // destructor
 socket_broker::~socket_broker()
@@ -26,18 +30,23 @@ socket_broker::~socket_broker()
     
 }
 
-// Initialize asynchronous tcp/ip socket acceptions.
-void socket_broker::start_accept()
+void socket_broker::start()
 {
-    _acceptor.async_accept(
-        _socket,
-        boost::bind(
-            &socket_broker::accept_complete,
-            this,
-            boost::asio::placeholders::error
-        )
-    );
+    read();
 }
+
+// Initialize asynchronous tcp/ip socket acceptions.
+// void socket_broker::start_accept()
+// {
+//     _acceptor.async_accept(
+//         _socket,
+//         boost::bind(
+//             &socket_broker::accept_complete,
+//             this,
+//             boost::asio::placeholders::error
+//         )
+//     );
+// }
 
 // Handle connection requests from client.
 void socket_broker::accept_complete(
@@ -60,13 +69,12 @@ void socket_broker::accept_complete(
 // Asynchronously read the socket receive buffer.
 void socket_broker::read()
 {
-    memset(&_receive_buffer, '\0', sizeof(_receive_buffer));
-    _socket.async_read_some
-    (
+    memset(&_receive_buffer, 0, sizeof(_receive_buffer));
+    _socket.async_read_some(
         boost::asio::buffer(_receive_buffer),
         boost::bind(
             &socket_broker::read_complete,
-            this,
+            shared_from_this(),
             boost::asio::placeholders::error,
             boost::asio::placeholders::bytes_transferred
         )
@@ -151,6 +159,4 @@ void socket_broker::reset()
     {
         _socket.close();
     }
-
-    start_accept();
 }
