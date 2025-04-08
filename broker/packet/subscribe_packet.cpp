@@ -52,6 +52,7 @@ std::unique_ptr<subscribe_packet> subscribe_packet::create(
 void subscribe_packet::debug()
 {
     std::cout << "----Subscribe packet----\n";
+    v_header.debug();
     std::cout << "---Payload---\n";
     for(size_t i = 0; i < this->topic_filter.size(); i++)
     {
@@ -68,4 +69,10 @@ subscribe_packet::variable_header subscribe_packet::variable_header::parse(const
     uint16_t packet_id = (data[0] << 8) | data[1];
 
     return subscribe_packet::variable_header{ packet_id };
+}
+
+void subscribe_packet::variable_header::debug()
+{
+    std::cout << "---Variable header---\n";
+    std::cout << "packet id: " << this->packet_identifier << "\n\n";
 }
