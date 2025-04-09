@@ -14,7 +14,7 @@ public:
 private:
     session_manager() = default;
 
-    static std::unordered_map<std::string, socket_broker*> client_map;
+    static std::unordered_map<std::string, socket_broker*> _session_map;
 
     session_manager(const session_manager&) = delete;
     session_manager operator=(const session_manager&) = delete;
