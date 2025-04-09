@@ -4,13 +4,14 @@
 
 std::unique_ptr<connect_packet> connect_packet::parse(const uint8_t* payload, size_t length)
 {
+    auto packet = std::make_unique<connect_packet>();
     size_t index = 0;
 
     // 1. Variable header
     connect_packet::variable_header v_header = variable_header::parse(payload, length);
+    packet->v_header = v_header;
     index += 2 + v_header.protocol_name.size() + 1 + 1 + 2; // Protocol name len + name + level + flags + keep alive
 
-    auto packet = std::make_unique<connect_packet>();
 
     // 2. Client identifier
     if (index + 2 > length) throw std::runtime_error("Malformed payload: Client ID length missing");
@@ -80,6 +81,7 @@ void connect_packet::debug()
 {
     std::cout << "----Connect----\n";
     v_header.debug();
+    std::cout << "---Payload---\n";
     std::cout << "client id: "    << client_id    << '\n';
     std::cout << "will topic: "   << will_topic   << '\n';
     std::cout << "will message: " << will_message << '\n';
@@ -89,6 +91,7 @@ void connect_packet::debug()
 
 connect_packet::variable_header connect_packet::variable_header::parse(const uint8_t* data, size_t size)
 {
+    connect_packet::variable_header v_header;
     size_t index = 0;
 
     // 1. Protocol name length (2 bytes)
@@ -98,12 +101,12 @@ connect_packet::variable_header connect_packet::variable_header::parse(const uin
 
     // 2. Protocol name (n bytes)
     if (size < index + protocol_name_len) throw std::runtime_error("Malformed variable header: Wrong protocol name");
-    std::string protocol_name = std::string(reinterpret_cast<const char*>(&data[index]), protocol_name_len);
+    v_header.protocol_name = std::string(reinterpret_cast<const char*>(&data[index]), protocol_name_len);
     index += protocol_name_len;
 
     // 3. Protocol level (1 byte)
     if (size < index + 1) throw std::runtime_error("Malformed variable header: Wrong protocol level");
-    uint8_t protocol_level = data[index++];
+    v_header.protocol_level = data[index++];
 
     // 4. Connect flags (1 byte)
     if (size < index + 1) throw std::runtime_error("Malformed variable header: Wrong connect_packet flags");
@@ -115,23 +118,20 @@ connect_packet::variable_header connect_packet::variable_header::parse(const uin
     bool will_flag       = (flags & 0b00000100) != 0;
     bool clean_session   = (flags & 0b00000010) != 0;
 
-    // 5. Keep alive (2 bytes)
-    if (size < index + 2) throw std::runtime_error("Malformed variable header: Wrong keep alive");
-    uint16_t keep_alive = (data[index] << 8) | data[index + 1];
-    index += 2;
-
-    variable_header v_header = 
+    v_header.connect_flags = 
     {
-        protocol_name,
-        protocol_level,
         username_flag,
         password_flag,
         will_retain,
         will_qos,
         will_flag,
-        clean_session,
-        keep_alive
+        clean_session
     };
+
+    // 5. Keep alive (2 bytes)
+    if (size < index + 2) throw std::runtime_error("Malformed variable header: Wrong keep alive");
+    v_header.keep_alive = (data[index] << 8) | data[index + 1];
+    index += 2;
 
     return v_header;
 }
