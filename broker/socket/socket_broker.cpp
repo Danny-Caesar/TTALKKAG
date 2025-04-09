@@ -9,22 +9,7 @@ socket_broker::socket_broker(boost::asio::ip::tcp::socket socket)
 {
 
 }
-// socket_broker::socket_broker(boost::asio::io_context io_context)
-// : _acceptor(
-//         io_context,
-//         boost::asio::ip::tcp::endpoint(
-//             // IPv4
-//             boost::asio::ip::tcp::v4(),
-//             // MQTT port
-//             atoi(std::getenv("MQTT_PORT"))
-//         )
-//     ),
-//     _socket(io_context)
-// {
 
-// }
-
-// destructor
 socket_broker::~socket_broker()
 {
     
@@ -34,19 +19,6 @@ void socket_broker::start()
 {
     read();
 }
-
-// Initialize asynchronous tcp/ip socket acceptions.
-// void socket_broker::start_accept()
-// {
-//     _acceptor.async_accept(
-//         _socket,
-//         boost::bind(
-//             &socket_broker::accept_complete,
-//             this,
-//             boost::asio::placeholders::error
-//         )
-//     );
-// }
 
 // Handle connection requests from client.
 void socket_broker::accept_complete(
@@ -112,7 +84,7 @@ void socket_broker::read_complete(
             if(data && size)
             {
                 // receive packet data parsing.
-                std::vector<uint8_t> reply_packet = packet_handler::handle(data, size);
+                std::vector<uint8_t> reply_packet = packet_handler::handle(data, size, *shared_from_this());
                 
                 if(!reply_packet.empty()) write(reply_packet.data(), reply_packet.size());
             }
@@ -160,3 +132,36 @@ void socket_broker::reset()
         _socket.close();
     }
 }
+
+
+//
+// legacy
+//
+
+// socket_broker::socket_broker(boost::asio::io_context io_context)
+// : _acceptor(
+//         io_context,
+//         boost::asio::ip::tcp::endpoint(
+//             // IPv4
+//             boost::asio::ip::tcp::v4(),
+//             // MQTT port
+//             atoi(std::getenv("MQTT_PORT"))
+//         )
+//     ),
+//     _socket(io_context)
+// {
+
+// }
+
+// Initialize asynchronous tcp/ip socket acceptions.
+// void socket_broker::start_accept()
+// {
+//     _acceptor.async_accept(
+//         _socket,
+//         boost::bind(
+//             &socket_broker::accept_complete,
+//             this,
+//             boost::asio::placeholders::error
+//         )
+//     );
+// }
