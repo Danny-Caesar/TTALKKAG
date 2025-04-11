@@ -3,7 +3,7 @@
 #include "session_manager.h"
 
 // Container initailize.
-std::unordered_map<std::string, socket_broker*> session_manager::_session_map;
+std::unordered_map<std::string, mqtt_session*> session_manager::_session_map;
 
 session_manager& session_manager::get_instance()
 {
@@ -11,26 +11,27 @@ session_manager& session_manager::get_instance()
     return instance;
 }
 
-void session_manager::register_client(const std::string& client_id, socket_broker* broker)
+void session_manager::register_session(const std::string& client_id, mqtt_session* session)
 {
     // Duplicated client check.
     if(_session_map.find(client_id) != _session_map.end()) return;
 
     // Register client.
-    _session_map[client_id] = broker;
+    _session_map[client_id] = session;
 }
 
-socket_broker* session_manager::get_client(const std::string& client_id)
+void session_manager::remove_session(const std::string& client_id)
+{
+    // _session_map[client_id]->socket->close();
+    _session_map.erase(client_id);
+}
+
+mqtt_session* session_manager::get_session(const std::string& client_id)
 {
     if(_session_map.find(client_id) != _session_map.end())
         return NULL;
     
     return _session_map[client_id];
-}
-
-void session_manager::remove_client(const std::string& client_id, socket_broker* broker)
-{
-    _session_map.erase(client_id);
 }
 
 void session_manager::debug()
