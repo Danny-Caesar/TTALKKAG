@@ -15,15 +15,23 @@ socket_broker::~socket_broker()
     
 }
 
+void socket_broker::set_client_id(std::string client_id)
+{
+    _client_id = client_id;
+}
+
+std::string socket_broker::get_clinet_id()
+{
+    return _client_id;
+}
+
 void socket_broker::start()
 {
     read();
 }
 
 // Handle connection requests from client.
-void socket_broker::accept_complete(
-    const boost::system::error_code &ec
-)
+void socket_broker::accept_complete(const boost::system::error_code &ec)
 {
     if(!ec)
     {
@@ -38,7 +46,7 @@ void socket_broker::accept_complete(
     }
 }
 
-// Asynchronously read the socket receive buffer.
+// Asynchronously read receive buffer of socket.
 void socket_broker::read()
 {
     memset(&_receive_buffer, 0, sizeof(_receive_buffer));
@@ -62,17 +70,11 @@ void socket_broker::read_complete(
     if(ec)
     {
         if(ec == boost::asio::error::eof)
-        {
-            // __log_trace("client disconnection.\n")
-            std::cout << "client disconnection.\n";
-        }
+            std::cout << "Client disconnected.\n";
         else
-        {
-            // __log_trace(error.message().c_str());
             std::cout << ec.message().c_str();
-        }
 
-        reset();
+        close();
     }
     else
     {
@@ -84,7 +86,7 @@ void socket_broker::read_complete(
             if(data && size)
             {
                 // receive packet data parsing.
-                std::vector<uint8_t> reply_packet = packet_handler::handle(data, size, *shared_from_this());
+                std::vector<uint8_t> reply_packet = packet_handler::handle(data, size, this);
                 
                 if(!reply_packet.empty()) write(reply_packet.data(), reply_packet.size());
             }
@@ -124,8 +126,8 @@ void socket_broker::write_complete(
 
 }
 
-// Reset the socket.
-void socket_broker::reset()
+// Close the socket.
+void socket_broker::close()
 {
     if(_socket.is_open())
     {
