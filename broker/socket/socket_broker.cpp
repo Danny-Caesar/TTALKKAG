@@ -116,7 +116,7 @@ void socket_broker::close()
     if(_socket.is_open())
     {
         _socket.close();
-    }   
+    }
 }
 
 

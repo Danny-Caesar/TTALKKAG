@@ -4,7 +4,7 @@
 #include "../session/session_manager.h"
 #include "../subscription/subscription_manager.h"
 
-std::vector<uint8_t> packet_handler::handle(const uint8_t* data, size_t size, socket_broker* socket)
+std::vector<uint8_t> packet_handler::handle(const uint8_t* data, size_t size, std::shared_ptr<socket_broker> socket)
 {
     std::unique_ptr<mqtt_control_packet> packet = mqtt_control_packet::parse(data, size);
     if(packet==NULL) return std::vector<uint8_t>();
@@ -25,7 +25,7 @@ std::vector<uint8_t> packet_handler::handle(const uint8_t* data, size_t size, so
     }
 }
 
-std::vector<uint8_t> packet_handler::handle_connect(connect_packet& packet, socket_broker* socket)
+std::vector<uint8_t> packet_handler::handle_connect(connect_packet& packet, std::shared_ptr<socket_broker> socket)
 {
     packet.debug();
 
@@ -56,7 +56,7 @@ std::vector<uint8_t> packet_handler::handle_connect(connect_packet& packet, sock
 
             session_present = true;
             
-            session_mgr.open_session(packet.client_id, socket);
+            session_mgr.open_session(packet.client_id, std::move(socket));
 
             // Send untransmitted messages.
             // Later...
@@ -65,7 +65,7 @@ std::vector<uint8_t> packet_handler::handle_connect(connect_packet& packet, sock
         {
             session_present = false;
 
-            session_mgr.register_session(packet.client_id, std::make_unique<mqtt_session>(packet, socket));
+            session_mgr.register_session(packet.client_id, std::make_unique<mqtt_session>(packet, std::move(socket)));
         }
     }
 
@@ -86,7 +86,7 @@ std::vector<uint8_t> packet_handler::handle_publish(publish_packet& packet)
     return std::vector<uint8_t>();
 }
 
-std::vector<uint8_t> packet_handler::handle_subscribe(subscribe_packet& packet, socket_broker* socket)
+std::vector<uint8_t> packet_handler::handle_subscribe(subscribe_packet& packet, std::shared_ptr<socket_broker> socket)
 {
     // // Debug subscribe packet
     // packet.debug();
@@ -137,7 +137,7 @@ std::vector<uint8_t> packet_handler::handle_subscribe(subscribe_packet& packet, 
     // return bytes;
 }
 
-std::vector<uint8_t> packet_handler::handle_disconnect(socket_broker* socket)
+std::vector<uint8_t> packet_handler::handle_disconnect(std::shared_ptr<socket_broker> socket)
 {
     // Get manager instance.
     session_manager& session_mgr = session_manager::get_instance();

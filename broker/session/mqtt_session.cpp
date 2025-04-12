@@ -1,11 +1,11 @@
 #include "mqtt_session.h"
 
-mqtt_session::mqtt_session(connect_packet packet, socket_broker* socket)
+mqtt_session::mqtt_session(connect_packet packet, std::shared_ptr<socket_broker> socket)
 {
     client_connect = true;
     clean_session = packet.v_header.connect_flags.clean_session;
     socket->set_client_id(packet.client_id);
-    this->socket = socket;
+    this->socket = std::move(socket);
     client_id = packet.client_id;
     user_name = packet.user_name;
     password = packet.password;
@@ -17,10 +17,10 @@ mqtt_session::mqtt_session(connect_packet packet, socket_broker* socket)
 
 // Open session when client reconnected.
 // Values in new connect packet would be ignored.
-void mqtt_session::open_session(socket_broker* socket)
+void mqtt_session::open_session(std::shared_ptr<socket_broker> socket)
 {
     client_connect = true;
-    this->socket = socket;
+    this->socket = std::move(socket);
 }
 
 // Close session when client disconnected.

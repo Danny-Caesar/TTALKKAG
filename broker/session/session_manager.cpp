@@ -32,10 +32,10 @@ void session_manager::remove_session(const std::string& client_id)
     _session_map.erase(client_id);
 }
 
-void session_manager::open_session(const std::string& client_id, socket_broker* socket)
+void session_manager::open_session(const std::string& client_id, std::shared_ptr<socket_broker> socket)
 {
     socket->set_client_id(_session_map[client_id]->client_id);
-    _session_map[client_id]->open_session(socket);
+    _session_map[client_id]->open_session(std::move(socket));
 }
 
 void session_manager::close_session(const std::string& client_id)

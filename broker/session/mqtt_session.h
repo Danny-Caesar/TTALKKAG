@@ -12,7 +12,7 @@ struct message
 class mqtt_session
 {
 public:
-    socket_broker* socket;
+    std::shared_ptr<socket_broker> socket;
     bool client_connect;
     bool clean_session;
 
@@ -28,11 +28,11 @@ public:
 
 public:
     mqtt_session() = default;
-    mqtt_session(connect_packet packet, socket_broker* socket);
+    mqtt_session(connect_packet packet, std::shared_ptr<socket_broker> socket);
     // mqtt_session operator=(const mqtt_session& session);
     // mqtt_session(const mqtt_session& session);
 
-    void open_session(socket_broker* socket);
+    void open_session(std::shared_ptr<socket_broker> socket);
     void close_session();
 
     void debug();
