@@ -3,7 +3,7 @@
 #include "mqtt_control_packet.h"
 #include "packet_handler.h"
 
-// constructor
+// Constructor
 socket_broker::socket_broker(boost::asio::ip::tcp::socket socket)
 : _socket(std::move(socket))
 {
@@ -20,7 +20,7 @@ void socket_broker::set_client_id(std::string client_id)
     _client_id = client_id;
 }
 
-std::string socket_broker::get_clinet_id()
+std::string socket_broker::get_client_id()
 {
     return _client_id;
 }
@@ -28,22 +28,6 @@ std::string socket_broker::get_clinet_id()
 void socket_broker::start()
 {
     read();
-}
-
-// Handle connection requests from client.
-void socket_broker::accept_complete(const boost::system::error_code &ec)
-{
-    if(!ec)
-    {
-        // __log_trace("a new connection was established.");
-        std::cout << "a new connection was established.\n";
-        read();
-    }
-    else
-    {
-        // __log_trace("error occured");
-        std::cout << "error occured.\nerror code: " << ec << '\n';
-    }
 }
 
 // Asynchronously read receive buffer of socket.
@@ -72,8 +56,8 @@ void socket_broker::read_complete(
         if(ec == boost::asio::error::eof)
             std::cout << "Client disconnected.\n";
         else
-            std::cout << ec.message().c_str();
-
+            std::cout << ec.message().c_str() << '\n';
+        
         close();
     }
     else
@@ -85,17 +69,17 @@ void socket_broker::read_complete(
         {
             if(data && size)
             {
-                // receive packet data parsing.
-                std::vector<uint8_t> reply_packet = packet_handler::handle(data, size, this);
+                // Receive packet data parsing.
+                std::vector<uint8_t> reply_packet = packet_handler::handle(data, size, shared_from_this());
                 
                 if(!reply_packet.empty()) write(reply_packet.data(), reply_packet.size());
             }
         };
 
-        // do transaction.
+        // Do transaction.
         transactor(_receive_buffer, bytes_received);
     
-        // read next data.
+        // Read next data.
         read();
     }
 }
@@ -111,7 +95,7 @@ void socket_broker::write(
         boost::asio::buffer(data, size),
         boost::bind(
             &socket_broker::write_complete,
-            this,
+            shared_from_this(),
             boost::asio::placeholders::error,
             boost::asio::placeholders::bytes_transferred
         )
@@ -132,7 +116,7 @@ void socket_broker::close()
     if(_socket.is_open())
     {
         _socket.close();
-    }
+    }   
 }
 
 
@@ -166,4 +150,18 @@ void socket_broker::close()
 //             boost::asio::placeholders::error
 //         )
 //     );
+// }
+
+// // Handle connection requests from client.
+// void socket_broker::accept_complete(const boost::system::error_code &ec)
+// {
+//     if(!ec)
+//     {
+//         std::cout << "New connection established.\n";
+//         read();
+//     }
+//     else
+//     {
+//         std::cout << "Error occured.\nerror code: " << ec << '\n';
+//     }
 // }

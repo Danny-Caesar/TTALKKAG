@@ -13,25 +13,27 @@ public:
     static const size_t buffer_size = 8192;
 
 public:
-        // socket_broker(boost::asio::io_context io_context);
-        socket_broker(boost::asio::ip::tcp::socket socket);
+    socket_broker(boost::asio::ip::tcp::socket socket);
     ~socket_broker();
-
-    void set_client_id(std::string client_id);
-    std::string get_clinet_id();
     
     void start_accept();
     void start();
     void close();
+
+    void set_client_id(std::string client_id);
+    std::string get_client_id();
     
     boost::asio::ip::tcp::socket& native_object() { return _socket; }
+    
+    // socket_broker(boost::asio::io_context io_context);
     
 private:
     void read();
     void write(const void* data, const size_t size);
     void read_complete(const boost::system::error_code& error, size_t bytes_received);
     void write_complete(const boost::system::error_code&, size_t);
-    void accept_complete(const boost::system::error_code& error);
+    
+    // void accept_complete(const boost::system::error_code& error);
     
 private:
     std::string _client_id;
