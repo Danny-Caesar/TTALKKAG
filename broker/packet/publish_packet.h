@@ -17,7 +17,6 @@ public:
     std::string message;
 public:
     mqtt_packet_type type() const override { return mqtt_packet_type::PUBLISH; }
-    void handle(socket_broker& broker) override;
 
     static std::unique_ptr<publish_packet> parse(const uint8_t* data, size_t size);
 };

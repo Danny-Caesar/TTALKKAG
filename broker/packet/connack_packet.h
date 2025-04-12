@@ -14,7 +14,6 @@ public:
 public:
 
     mqtt_packet_type type() const override { return mqtt_packet_type::CONNACK; }
-    void handle(socket_broker&) override { /* No need */ }
 
     static std::unique_ptr<connack_packet> create(bool session_present, uint8_t return_code);
 
@@ -22,11 +21,11 @@ public:
     {
         std::vector<uint8_t> packet;
 
-        // Fixed Header
+        // 1. Fixed header
         packet.push_back(0x20);  // CONNACK (Type = 2 << 4), flags = 0
         packet.push_back(0x02);  // Remaining Length = 2
 
-        // Variable Header
+        // 2. Variable header
         uint8_t flags = v_header.session_present ? 0x01 : 0x00;
         packet.push_back(flags);        // Connect Acknowledge Flags
         packet.push_back(v_header.return_code);  // Connect Return Code

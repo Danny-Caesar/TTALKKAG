@@ -1,71 +1,44 @@
 #include <iostream>
 #include "socket_broker.h"
-#include "../packet/mqtt_control_packet.h"
+#include "mqtt_control_packet.h"
+#include "packet_handler.h"
 
-// constructor
-socket_broker::socket_broker(boost::asio::io_context &io_context)
-:
-    _acceptor(
-        io_context,
-        boost::asio::ip::tcp::endpoint(
-            // IPv4
-            boost::asio::ip::tcp::v4(),
-            // MQTT port
-            atoi(std::getenv("MQTT_PORT"))
-        )
-    ),
-    _socket(io_context)
+// Constructor
+socket_broker::socket_broker(boost::asio::ip::tcp::socket socket)
+: _socket(std::move(socket))
 {
 
 }
 
-// destructor
 socket_broker::~socket_broker()
 {
     
 }
 
-// Initialize asynchronous tcp/ip socket acceptions.
-void socket_broker::start_accept()
+void socket_broker::set_client_id(std::string client_id)
 {
-    _acceptor.async_accept(
-        _socket,
-        boost::bind(
-            &socket_broker::accept_complete,
-            this,
-            boost::asio::placeholders::error
-        )
-    );
+    _client_id = client_id;
 }
 
-// Handle connection requests from client.
-void socket_broker::accept_complete(
-    const boost::system::error_code &ec
-)
+std::string socket_broker::get_client_id()
 {
-    if(!ec)
-    {
-        // __log_trace("a new connection was established.");
-        std::cout << "a new connection was established.\n";
-        read();
-    }
-    else
-    {
-        // __log_trace("error occured");
-        std::cout << "error occured.\nerror code: " << ec << '\n';
-    }
+    return _client_id;
 }
 
-// Asynchronously read the socket receive buffer.
+void socket_broker::start()
+{
+    read();
+}
+
+// Asynchronously read receive buffer of socket.
 void socket_broker::read()
 {
-    memset(&_receive_buffer, '\0', sizeof(_receive_buffer));
-    _socket.async_read_some
-    (
+    memset(&_receive_buffer, 0, sizeof(_receive_buffer));
+    _socket.async_read_some(
         boost::asio::buffer(_receive_buffer),
         boost::bind(
             &socket_broker::read_complete,
-            this,
+            shared_from_this(),
             boost::asio::placeholders::error,
             boost::asio::placeholders::bytes_transferred
         )
@@ -81,17 +54,11 @@ void socket_broker::read_complete(
     if(ec)
     {
         if(ec == boost::asio::error::eof)
-        {
-            // __log_trace("client disconnection.\n")
-            std::cout << "client disconnection.\n";
-        }
+            std::cout << "Client disconnected.\n";
         else
-        {
-            // __log_trace(error.message().c_str());
-            std::cout << ec.message().c_str();
-        }
-
-        reset();
+            std::cout << ec.message().c_str() << '\n';
+        
+        close();
     }
     else
     {
@@ -102,18 +69,17 @@ void socket_broker::read_complete(
         {
             if(data && size)
             {
-
-                // receive packet data parsing.
-                std::unique_ptr<mqtt_control_packet> control_packet = mqtt_control_packet::parse(data, size);
+                // Receive packet data parsing.
+                std::vector<uint8_t> reply_packet = packet_handler::handle(data, size, shared_from_this());
                 
-                if(control_packet) control_packet->handle(*this);
+                if(!reply_packet.empty()) write(reply_packet.data(), reply_packet.size());
             }
         };
 
-        // do transaction.
+        // Do transaction.
         transactor(_receive_buffer, bytes_received);
     
-        // read next data.
+        // Read next data.
         read();
     }
 }
@@ -129,7 +95,7 @@ void socket_broker::write(
         boost::asio::buffer(data, size),
         boost::bind(
             &socket_broker::write_complete,
-            this,
+            shared_from_this(),
             boost::asio::placeholders::error,
             boost::asio::placeholders::bytes_transferred
         )
@@ -144,13 +110,58 @@ void socket_broker::write_complete(
 
 }
 
-// Reset the socket.
-void socket_broker::reset()
+// Close the socket.
+void socket_broker::close()
 {
     if(_socket.is_open())
     {
         _socket.close();
     }
-
-    start_accept();
 }
+
+
+//
+// legacy
+//
+
+// socket_broker::socket_broker(boost::asio::io_context io_context)
+// : _acceptor(
+//         io_context,
+//         boost::asio::ip::tcp::endpoint(
+//             // IPv4
+//             boost::asio::ip::tcp::v4(),
+//             // MQTT port
+//             atoi(std::getenv("MQTT_PORT"))
+//         )
+//     ),
+//     _socket(io_context)
+// {
+
+// }
+
+// Initialize asynchronous tcp/ip socket acceptions.
+// void socket_broker::start_accept()
+// {
+//     _acceptor.async_accept(
+//         _socket,
+//         boost::bind(
+//             &socket_broker::accept_complete,
+//             this,
+//             boost::asio::placeholders::error
+//         )
+//     );
+// }
+
+// // Handle connection requests from client.
+// void socket_broker::accept_complete(const boost::system::error_code &ec)
+// {
+//     if(!ec)
+//     {
+//         std::cout << "New connection established.\n";
+//         read();
+//     }
+//     else
+//     {
+//         std::cout << "Error occured.\nerror code: " << ec << '\n';
+//     }
+// }

@@ -1,5 +1,4 @@
 #include <stdexcept>
-#include <iostream>
 #include "publish_packet.h"
 
 std::unique_ptr<publish_packet> publish_packet::parse(const uint8_t* data, size_t size)
@@ -15,11 +14,6 @@ std::unique_ptr<publish_packet> publish_packet::parse(const uint8_t* data, size_
     packet->message = std::string(reinterpret_cast<const char*>(&data[index]), size - index);
 
     return packet;
-}
-
-void publish_packet::handle(socket_broker& broker)
-{
-    std::cout << "message: " << this->message << "\n\n";
 }
 
 publish_packet::variable_header publish_packet::variable_header::parse(const uint8_t* data, size_t size)
