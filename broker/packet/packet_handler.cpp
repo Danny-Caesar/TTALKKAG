@@ -13,14 +13,14 @@ std::vector<uint8_t> packet_handler::handle(const uint8_t* data, size_t size, so
     {
         case mqtt_packet_type::CONNECT:
             return handle_connect(static_cast<connect_packet&>(*packet), socket);
-
         case mqtt_packet_type::PUBLISH:
             return handle_publish(static_cast<publish_packet&>(*packet));
-
         case mqtt_packet_type::SUBSCRIBE:
             return handle_subscribe(static_cast<subscribe_packet&>(*packet), socket);
+        case mqtt_packet_type::DISCONNECT:
+            return handle_disconnect(socket);
         default:
-        throw std::runtime_error("Unhandlable packet type: " + static_cast<int>(packet->type()));
+            throw std::runtime_error("Unhandlable packet type: " + static_cast<int>(packet->type()));
             return std::vector<uint8_t>();
     }
 }
@@ -44,21 +44,19 @@ std::vector<uint8_t> packet_handler::handle_connect(connect_packet& packet, sock
     {
         session_present = false;
 
-        mqtt_session session(packet, socket);
-        session_mgr.register_session(packet.client_id, &session);
+        session_mgr.register_session(packet.client_id, std::make_unique<mqtt_session>(packet, std::move(socket)));
     }
     else
     {
         // Register new session if client not duplicated.
-        if((session_mgr.get_session(packet.client_id)) != NULL)
+        if((session_mgr.has_session(packet.client_id)))
         {
-            mqtt_session* session = session_mgr.get_session(packet.client_id);
             // Connect would be rejected(0x02) if values of new connect packet are different form stated session.
             // Later...
 
             session_present = true;
             
-            session->open_session(socket);
+            session_mgr.open_session(packet.client_id, socket);
 
             // Send untransmitted messages.
             // Later...
@@ -67,13 +65,10 @@ std::vector<uint8_t> packet_handler::handle_connect(connect_packet& packet, sock
         {
             session_present = false;
 
-            socket->set_client_id(packet.client_id);
-
-            mqtt_session session(packet, socket);
-            session_mgr.register_session(packet.client_id, &session);
+            session_mgr.register_session(packet.client_id, std::make_unique<mqtt_session>(packet, socket));
         }
     }
-    
+
     // Debug session
     session_mgr.debug();
 
@@ -147,15 +142,20 @@ std::vector<uint8_t> packet_handler::handle_disconnect(socket_broker* socket)
     // Get manager instance.
     session_manager& session_mgr = session_manager::get_instance();
 
-    // 1. Close socket.
-    socket->close();
+    // 1. Disconnect client and close socket.
+    std::string client_id = socket->get_client_id();
+    if(session_mgr.is_clean_session(client_id))
+    {
+        session_mgr.remove_session(client_id);
+    }
+    else
+    {
+        session_mgr.close_session(client_id);
+        // Discard will message.
+        // Later...
+    }
 
-    // 2. Set client disconnection on session.
-    mqtt_session* session = session_mgr.get_session(socket->get_clinet_id());
-    session->client_connect = false;
-
-    // 3. Discard will message.
-    // Later...
+    session_mgr.debug();
 
     return std::vector<uint8_t>();
 }

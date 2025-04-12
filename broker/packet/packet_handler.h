@@ -10,8 +10,10 @@
 #include "socket_broker.h"
 
 
-class packet_handler {
+class packet_handler
+{
 public:
+    // static std::vector<uint8_t> handle(const uint8_t* data, size_t size, std::unique_ptr<socket_broker> socket);
     static std::vector<uint8_t> handle(const uint8_t* data, size_t size, socket_broker* socket);
 
 private:
