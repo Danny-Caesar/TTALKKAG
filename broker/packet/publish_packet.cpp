@@ -29,6 +29,14 @@ uint8_t publish_packet::get_flags()
     return _flags;
 }
 
+void publish_packet::debug()
+{
+    std::cout << "----Publish packet----\n";
+    v_header.debug();
+    std::cout << "flags: "   << _flags  << '\n';
+    std::cout << "message: " << message << "\n\n";
+}
+
 publish_packet::variable_header publish_packet::variable_header::parse(const uint8_t* data, size_t size)
 {
     size_t index = 0;
@@ -61,7 +69,7 @@ publish_packet::variable_header publish_packet::variable_header::parse(const uin
 
 void publish_packet::variable_header::debug()
 {
-    std::cout << "----Variable Header----\n";
+    std::cout << "----Variable header----\n";
     std::cout << "topic name: "        << this->topic_name        << '\n';
-    std::cout << "packet identifier: " << this->packet_identifier << "\n\n";
+    std::cout << "packet identifier: " << this->packet_identifier << '\n';
 }

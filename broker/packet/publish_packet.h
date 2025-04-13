@@ -23,6 +23,7 @@ public:
 
     void set_flags(uint8_t flags);
     uint8_t get_flags();
+    void debug();
 
     std::vector<uint8_t> serialize() const
     {
