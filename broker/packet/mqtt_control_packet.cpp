@@ -25,7 +25,7 @@ std::unique_ptr<mqtt_control_packet> mqtt_control_packet::mqtt_control_packet::p
         case mqtt_packet_type::CONNECT:
             return connect_packet::parse(payload, header.remaining_length);
         case mqtt_packet_type::PUBLISH:
-            return publish_packet::parse(payload, header.remaining_length);
+            return publish_packet::parse(payload, header.remaining_length, header.flags);
         case mqtt_packet_type::SUBSCRIBE:
             return subscribe_packet::parse(payload, header.remaining_length);
         case mqtt_packet_type::DISCONNECT:

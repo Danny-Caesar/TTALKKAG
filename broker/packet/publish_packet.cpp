@@ -1,19 +1,32 @@
 #include <stdexcept>
 #include "publish_packet.h"
 
-std::unique_ptr<publish_packet> publish_packet::parse(const uint8_t* data, size_t size)
+std::unique_ptr<publish_packet> publish_packet::parse(const uint8_t* data, size_t size, uint8_t flags)
 {
     size_t index = 0;
     auto packet = std::make_unique<publish_packet>();
+
+    // 1. Fixed header
+    packet->_flags = flags;
     
-    // 1. Variable header
+    // 2. Variable header
     packet->v_header = publish_packet::variable_header::parse(data, size);
     index += packet->v_header.topic_name.length() + 2;
 
-    // 2. Message
+    // 3. Message
     packet->message = std::string(reinterpret_cast<const char*>(&data[index]), size - index);
 
     return packet;
+}
+
+void publish_packet::set_flags(uint8_t flags)
+{
+    _flags = flags;
+}
+
+uint8_t publish_packet::get_flags()
+{
+    return _flags;
 }
 
 publish_packet::variable_header publish_packet::variable_header::parse(const uint8_t* data, size_t size)
