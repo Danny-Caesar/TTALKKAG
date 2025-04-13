@@ -88,53 +88,38 @@ std::vector<uint8_t> packet_handler::handle_publish(publish_packet& packet)
 
 std::vector<uint8_t> packet_handler::handle_subscribe(subscribe_packet& packet, std::shared_ptr<socket_broker> socket)
 {
-    // // Debug subscribe packet
-    // packet.debug();
+    // Debug subscribe packet.
+    packet.debug();
 
-    // // Get manager instances.
-    // session_manager& session_mgr = session_manager::get_instance();
-    // subscription_manager& sub_mgr = subscription_manager::get_instance();
+    // Get manager instances.
+    subscription_manager& sub_mgr = subscription_manager::get_instance();
 
-    // // 1. Add or update subscription
-    // for(size_t i = 0; i < packet.topic_filter.size(); i++)
-    // {
-    //     sub_mgr.add_subscription(packet.topic_filter[i], socket.get_clinet_id(), packet.qos_request[i]);
-    // }
+    // 1. Add or update subscriptions.
+    std::vector<uint8_t> return_code;
+    for(size_t i = 0; i < packet.topic_filter.size(); i++)
+    {
+        // Validate topic filter.
+        // Set return code 0x80 if topic filter not validate.
+
+        // Add subscription.
+        sub_mgr.add_subscription(packet.topic_filter[i], socket->get_client_id(), packet.qos_request[i]);
+
+        // Decide return code.
+        return_code.push_back(packet.qos_request[i]);
+
+        // Debug subscription insertion.
+        sub_mgr.debug(packet.topic_filter[i]);
+    }
     
-    // // 2. Decide return code.
-    // std::vector<uint8_t> return_code;
-    // for(auto tf = packet.topic_filter.begin(); tf != packet.topic_filter.end(); tf++)
-    // {
+    // 2. Reply suback packet.
+    std::unique_ptr<suback_packet> suback = suback_packet::create(packet.v_header.packet_identifier, return_code);
+    auto bytes = suback->serialize();
 
-    //     auto subs = sub_mgr.get_subscribers(*tf);
+    // Debug suback packet
+    fixed_header::parse(bytes.data(), bytes.size()).debug();
+    suback->debug();
 
-    //     auto it = std::find_if(subs.begin(), subs.end(), [&](const subscription s)
-    //     {
-    //         return s.client_id == socket.get_clinet_id();
-    //     });
-
-    //     // Set return code.
-    //     if(it != subs.end())
-    //     {
-    //         // Set return code as a qos level of the subscription.
-    //         return_code.push_back(it->qos);
-    //     }
-    //     else
-    //     {
-    //         // Subscribe failure.
-    //         return_code.push_back(0x80);
-    //     }
-    // }
-    
-    // // 3. Reply suback packet.
-    // std::unique_ptr<suback_packet> suback = suback_packet::create(packet.v_header.packet_identifier, return_code);
-    // auto bytes = suback->serialize();
-
-    // // Debug suback packet
-    // fixed_header::parse(bytes.data(), bytes.size()).debug();
-    // suback->debug();
-
-    // return bytes;
+    return bytes;
 }
 
 std::vector<uint8_t> packet_handler::handle_disconnect(std::shared_ptr<socket_broker> socket)
