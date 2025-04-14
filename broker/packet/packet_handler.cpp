@@ -30,33 +30,38 @@ std::vector<uint8_t> packet_handler::handle_connect(connect_packet& packet, std:
     packet.debug();
 
     // Get manager instnaces
-    session_manager& session_mgr = session_manager::get_instance();
+    session_manager& ses_mgr = session_manager::get_instance();
 
     bool session_present;
     uint8_t return_code = 0;
 
     // Version check
     if(packet.v_header.protocol_name != "MQTT" || packet.v_header.protocol_level != 0x04)
+    {
         return_code = 0x01;
+    }
 
     // Handle clean session
     if(packet.v_header.connect_flags.clean_session)
     {
         session_present = false;
 
-        session_mgr.register_session(packet.client_id, std::make_unique<mqtt_session>(packet, std::move(socket)));
+        ses_mgr.register_session(packet.client_id, std::make_unique<mqtt_session>(packet, std::move(socket)));
     }
     else
     {
         // Register new session if client not duplicated.
-        if((session_mgr.has_session(packet.client_id)))
+        if((ses_mgr.has_session(packet.client_id)))
         {
             // Connect would be rejected(0x02) if values of new connect packet are different form stated session.
             // Later...
 
+            std::string client_id = packet.client_id;
             session_present = true;
             
-            session_mgr.open_session(packet.client_id, std::move(socket));
+            ses_mgr.open_session(client_id, std::move(socket));
+
+            mqtt_session session = ses_mgr.get_session(client_id);
 
             // Get messages retained in session
             // Set flags (Dup, QoS, Retain)
@@ -66,12 +71,12 @@ std::vector<uint8_t> packet_handler::handle_connect(connect_packet& packet, std:
         {
             session_present = false;
 
-            session_mgr.register_session(packet.client_id, std::make_unique<mqtt_session>(packet, std::move(socket)));
+            ses_mgr.register_session(packet.client_id, std::make_unique<mqtt_session>(packet, std::move(socket)));
         }
     }
 
     // Debug session
-    session_mgr.debug();
+    ses_mgr.debug();
 
     // Create reply packet.
     auto connack = connack_packet::create(session_present, return_code);
@@ -97,12 +102,18 @@ std::vector<uint8_t> packet_handler::handle_publish(publish_packet& packet)
         mqtt_session session = ses_mgr.get_session(sub.client_id);
         
         // Decide QoS
-        uint8_t qos = std::min((uint8_t)((packet.get_flags() >> 1) | 0x03), sub.qos);
-        // Set flags
-        packet.set_flags(0, qos, 0);
+        uint8_t qos = std::min((uint8_t)(packet.qos | 0x03), sub.qos);
+        packet.qos = qos;
 
-        // Do retain things.
-        session.retain_message(packet);
+        if(session.client_connect)
+        {
+            session.socket->send_packet(packet);
+        }
+        else
+        {
+            // Do retain things.
+            session.retain_message(packet);
+        }
     }
 
     // Do QoS ack things
@@ -140,8 +151,8 @@ std::vector<uint8_t> packet_handler::handle_subscribe(subscribe_packet& packet, 
         // Get retained messages related to topics.
         publish_packet message = sub_mgr.get_retained_message(packet.topic_filter[i]);
         // Decide QoS and set flags.
-        uint8_t qos = std::min((uint8_t)((message.get_flags() >> 1) | 0x03), packet.qos_request[i]);
-        message.set_flags(0, qos, 1);
+        uint8_t qos = std::min((uint8_t)(message.qos | 0x03), packet.qos_request[i]);
+        message.qos = qos;
         // Transmit messages
         socket->send_packet(message);
     }
@@ -160,22 +171,22 @@ std::vector<uint8_t> packet_handler::handle_subscribe(subscribe_packet& packet, 
 std::vector<uint8_t> packet_handler::handle_disconnect(std::shared_ptr<socket_broker> socket)
 {
     // Get manager instance.
-    session_manager& session_mgr = session_manager::get_instance();
+    session_manager& ses_mgr = session_manager::get_instance();
 
     // 1. Disconnect client and close socket.
     std::string client_id = socket->get_client_id();
-    if(session_mgr.is_clean_session(client_id))
+    if(ses_mgr.is_clean_session(client_id))
     {
-        session_mgr.remove_session(client_id);
+        ses_mgr.remove_session(client_id);
     }
     else
     {
-        session_mgr.close_session(client_id);
+        ses_mgr.close_session(client_id);
         // Discard will message.
         // Later...
     }
 
-    session_mgr.debug();
+    ses_mgr.debug();
 
     return std::vector<uint8_t>();
 }
