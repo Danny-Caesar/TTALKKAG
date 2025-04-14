@@ -4,6 +4,7 @@
 
 // Initalization
 std::unordered_map<std::string, std::vector<subscription>> subscription_manager::_subscription_map;
+std::unordered_map<std::string, publish_packet> subscription_manager::_message_map;
 
 // Return singleton instance.
 subscription_manager& subscription_manager::get_instance()
@@ -71,6 +72,41 @@ std::vector<subscription> subscription_manager::get_subscribers(const std::strin
         return std::vector<subscription>();
 
     return it->second;
+}
+
+// Get topics client subscribing.
+std::vector<std::string> subscription_manager::get_topics(const std::string& client_id)
+{
+    std::vector<std::string> topics;
+    
+    for(auto item : _subscription_map)
+    {
+        for(auto subscription : item.second)
+        {
+            if(subscription.client_id == client_id)
+            {
+                topics.push_back(item.first);
+                break;
+            }
+        }
+    }
+
+    return topics;
+}
+
+void subscription_manager::retain_message(const std::string& topic, const publish_packet& message)
+{
+    _message_map[topic] = message;
+}
+
+void subscription_manager::remove_message(const std::string& topic)
+{
+    _message_map.erase(topic);
+}
+
+publish_packet subscription_manager::get_retained_message(const std::string& topic)
+{
+    
 }
 
 void subscription_manager::debug()
