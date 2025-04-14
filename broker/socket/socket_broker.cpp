@@ -30,6 +30,12 @@ void socket_broker::start()
     read();
 }
 
+void socket_broker::send_packet(const publish_packet& packet)
+{
+    auto bytes = packet.serialize();
+    write(bytes.data(), bytes.size());
+}
+
 // Asynchronously read receive buffer of socket.
 void socket_broker::read()
 {

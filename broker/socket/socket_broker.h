@@ -20,6 +20,8 @@ public:
     void start();
     void close();
 
+    void send_packet(const publish_packet& packet);
+
     void set_client_id(std::string client_id);
     std::string get_client_id();
     
