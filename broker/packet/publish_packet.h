@@ -21,7 +21,7 @@ public:
     mqtt_packet_type type() const override { return mqtt_packet_type::PUBLISH; }
     static std::unique_ptr<publish_packet> parse(const uint8_t* data, size_t size, uint8_t flags);
 
-    void set_flags(uint8_t flags);
+    void set_flags(uint8_t dup, uint8_t qos, uint8_t retain);
     uint8_t get_flags();
     void debug();
 

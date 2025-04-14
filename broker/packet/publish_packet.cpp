@@ -19,9 +19,9 @@ std::unique_ptr<publish_packet> publish_packet::parse(const uint8_t* data, size_
     return packet;
 }
 
-void publish_packet::set_flags(uint8_t flags)
+void publish_packet::set_flags(uint8_t dup, uint8_t qos, uint8_t retain)
 {
-    _flags = flags;
+    _flags = (dup << 3) | (qos << 1) | retain;
 }
 
 uint8_t publish_packet::get_flags()
