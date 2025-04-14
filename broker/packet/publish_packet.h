@@ -7,6 +7,9 @@
 class publish_packet : public mqtt_control_packet
 {
 public:
+    uint8_t dup;
+    uint8_t qos;
+    uint8_t retain;
     struct variable_header
     {
         std::string topic_name;
@@ -21,8 +24,6 @@ public:
     mqtt_packet_type type() const override { return mqtt_packet_type::PUBLISH; }
     static std::unique_ptr<publish_packet> parse(const uint8_t* data, size_t size, uint8_t flags);
 
-    void set_flags(uint8_t dup, uint8_t qos, uint8_t retain);
-    uint8_t get_flags();
     void debug();
 
     std::vector<uint8_t> serialize() const
@@ -30,7 +31,7 @@ public:
         std::vector<uint8_t> packet;
         
         // 1. Fixed header
-        packet.push_back(0x20 | _flags); // PUBLISH (2 << 4), DUP, QoS, Retain
+        packet.push_back(0x20 | (dup << 3) | (qos << 1) | retain); // PUBLISH (2 << 4), DUP, QoS, Retain
 
         // 2. Variable header
         // Topic name length
@@ -54,7 +55,4 @@ public:
             packet.push_back(message[i]);
         }
     };
-
-private:
-    uint8_t _flags;
 };

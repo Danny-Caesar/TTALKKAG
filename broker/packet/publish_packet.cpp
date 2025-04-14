@@ -7,7 +7,9 @@ std::unique_ptr<publish_packet> publish_packet::parse(const uint8_t* data, size_
     auto packet = std::make_unique<publish_packet>();
 
     // 1. Fixed header
-    packet->_flags = flags;
+    packet->dup = 0;
+    packet->qos = (flags >> 1) | 0x03;
+    packet->retain = flags | 0x01;
     
     // 2. Variable header
     packet->v_header = publish_packet::variable_header::parse(data, size);
@@ -19,21 +21,13 @@ std::unique_ptr<publish_packet> publish_packet::parse(const uint8_t* data, size_
     return packet;
 }
 
-void publish_packet::set_flags(uint8_t dup, uint8_t qos, uint8_t retain)
-{
-    _flags = (dup << 3) | (qos << 1) | retain;
-}
-
-uint8_t publish_packet::get_flags()
-{
-    return _flags;
-}
-
 void publish_packet::debug()
 {
     std::cout << "----Publish packet----\n";
     v_header.debug();
-    std::cout << "flags: "   << _flags  << '\n';
+    std::cout << "dup: "     << dup     << '\n';
+    std::cout << "QoS: "     << qos     << '\n';
+    std::cout << "retain: "  << retain  << '\n';
     std::cout << "message: " << message << "\n\n";
 }
 
