@@ -58,8 +58,9 @@ std::vector<uint8_t> packet_handler::handle_connect(connect_packet& packet, std:
             
             session_mgr.open_session(packet.client_id, std::move(socket));
 
-            // Send untransmitted messages.
-            // Later...
+            // Get messages retained in session
+            // Set flags (Dup, QoS, Retain)
+            // Transmit messages
         }
         else
         {
@@ -111,7 +112,19 @@ std::vector<uint8_t> packet_handler::handle_subscribe(subscribe_packet& packet, 
         sub_mgr.debug(packet.topic_filter[i]);
     }
     
-    // 2. Reply suback packet.
+    // 2. Transmit retained messages
+    for(size_t i = 0; i < packet.topic_filter.size(); i++)
+    {
+        // Get retained messages related to topics.
+        publish_packet message = sub_mgr.get_retained_message(packet.topic_filter[i]);
+        // Decide QoS and set flags.
+        uint8_t qos = std::min((uint8_t)((message.get_flags() >> 1) | 0x03), packet.qos_request[i]);
+        message.set_flags(0, qos, 1);
+        // Transmit messages
+        socket->send_packet(message);
+    }
+
+    // 3. Reply suback packet.
     std::unique_ptr<suback_packet> suback = suback_packet::create(packet.v_header.packet_identifier, return_code);
     auto bytes = suback->serialize();
 
