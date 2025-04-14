@@ -1,6 +1,6 @@
 #include "mqtt_session.h"
 
-mqtt_session::mqtt_session(connect_packet packet, std::shared_ptr<socket_broker> socket)
+mqtt_session::mqtt_session(connect_packet& packet, std::shared_ptr<socket_broker> socket)
 {
     client_connect = true;
     clean_session = packet.v_header.connect_flags.clean_session;
@@ -28,6 +28,37 @@ void mqtt_session::close_session()
 {
     client_connect = false;
     socket->close();
+}
+
+// Handle message according retain flag
+void mqtt_session::retain_message(publish_packet& packet)
+{
+    std::string topic_name = packet.v_header.topic_name;
+    bool retain = packet.get_flags() | 0x01;
+    uint8_t qos = (packet.get_flags() >> 1) | 0x03;
+
+    if(retain)
+    {
+        if(packet.message.size() == 0){
+            // Discard current message.
+            // Discard retained message.
+            _message_map.erase(topic_name);
+            return;
+        }
+
+        if(qos > 0)
+        {
+            // Overwrite retained message.
+            _message_map[packet.v_header.topic_name] = packet;
+        }
+        else
+        {
+            // Discard retained message.
+            _message_map[packet.v_header.topic_name] = packet;
+        }
+    }
+
+    // Nothing happens when retain is 0.
 }
 
 void mqtt_session::debug()

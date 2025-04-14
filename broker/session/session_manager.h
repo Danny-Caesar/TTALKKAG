@@ -9,6 +9,7 @@ public:
     static session_manager& get_instance();
     void register_session(const std::string& client_id, std::unique_ptr<mqtt_session> session);
     void remove_session(const std::string& client_id);
+    mqtt_session& get_session(const std::string& client_id);
     void open_session(const std::string& client_id, std::shared_ptr<socket_broker> socket);
     void close_session(const std::string& client_id);
     bool has_session(const std::string& client_id);
