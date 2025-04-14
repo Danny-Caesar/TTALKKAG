@@ -2,12 +2,7 @@
 #include <queue>
 #include "socket_broker.h"
 #include "connect_packet.h"
-
-struct message
-{
-    std::string topic;
-    std::string message;
-};
+#include "publish_packet.h"
 
 class mqtt_session
 {
@@ -28,15 +23,17 @@ public:
 
 public:
     mqtt_session() = default;
-    mqtt_session(connect_packet packet, std::shared_ptr<socket_broker> socket);
+    mqtt_session(connect_packet& packet, std::shared_ptr<socket_broker> socket);
     // mqtt_session operator=(const mqtt_session& session);
     // mqtt_session(const mqtt_session& session);
 
     void open_session(std::shared_ptr<socket_broker> socket);
     void close_session();
 
+    void retain_message(publish_packet& packet);
+
     void debug();
 
 private:
-    std::queue<message> _message_queue;
+static std::unordered_map<std::string, publish_packet> _message_map;
 };
