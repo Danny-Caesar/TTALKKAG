@@ -82,8 +82,30 @@ std::vector<uint8_t> packet_handler::handle_connect(connect_packet& packet, std:
 
 std::vector<uint8_t> packet_handler::handle_publish(publish_packet& packet)
 {
-    std::cout << "message: " << packet.message << "\n\n";
+    // Debug packet
+    packet.debug();
 
+    // Get manager instances.
+    subscription_manager& sub_mgr = subscription_manager::get_instance();
+    session_manager& ses_mgr = session_manager::get_instance();
+
+    // Get subscriptions related to the topic.
+    std::vector<subscription> subs = sub_mgr.get_subscribers(packet.v_header.topic_name);
+    for(subscription sub : subs)
+    {
+        // Get session of subscriber.
+        mqtt_session session = ses_mgr.get_session(sub.client_id);
+        
+        // Decide QoS
+        uint8_t qos = std::min((uint8_t)((packet.get_flags() >> 1) | 0x03), sub.qos);
+        // Set flags
+        packet.set_flags(0, qos, 0);
+
+        // Do retain things.
+        session.retain_message(packet);
+    }
+
+    // Do QoS ack things
     return std::vector<uint8_t>();
 }
 
