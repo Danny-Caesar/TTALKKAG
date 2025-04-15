@@ -31,9 +31,10 @@ public:
     void close_session();
 
     void retain_message(publish_packet& packet);
+    void flush_message();
 
     void debug();
 
 private:
-static std::unordered_map<std::string, publish_packet> _message_map;
+    static std::unordered_map<std::string, publish_packet> _message_map;
 };
