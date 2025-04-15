@@ -25,10 +25,10 @@ void publish_packet::debug()
 {
     std::cout << "----Publish packet----\n";
     v_header.debug();
-    std::cout << "dup: "     << dup     << '\n';
-    std::cout << "QoS: "     << qos     << '\n';
-    std::cout << "retain: "  << retain  << '\n';
-    std::cout << "message: " << message << "\n\n";
+    std::cout << "dup: "     << (int)dup     << '\n';
+    std::cout << "QoS: "     << (int)qos     << '\n';
+    std::cout << "retain: "  << (int)retain  << '\n';
+    std::cout << "message: " << message      << "\n\n";
 }
 
 publish_packet::variable_header publish_packet::variable_header::parse(const uint8_t* data, size_t size)
