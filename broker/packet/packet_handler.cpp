@@ -92,9 +92,6 @@ std::vector<uint8_t> packet_handler::handle_publish(publish_packet& packet)
     // Get manager instances.
     subscription_manager& sub_mgr = subscription_manager::get_instance();
     session_manager& ses_mgr = session_manager::get_instance();
-
-    // Do retain things related to subscription manager.
-    sub_mgr.retain_message(packet.v_header.topic_name, packet);
     
     // Get subscriptions related to the topic.
     std::vector<subscription> subs = sub_mgr.get_subscription(packet.v_header.topic_name);
@@ -104,23 +101,31 @@ std::vector<uint8_t> packet_handler::handle_publish(publish_packet& packet)
     {
         // Get session of subscriber.
         mqtt_session session = ses_mgr.get_session(sub.client_id);
+
+        publish_packet message = packet;
         
         // Decide QoS
-        uint8_t qos = std::min(packet.qos, sub.qos);
-        packet.qos = qos;
+        uint8_t qos = std::min(message.qos, sub.qos);
+        message.qos = qos;
+
+        // Set retain.
+        message.retain = 0;
 
         if(session.client_connect)
         {
             // Client online.
-            session.socket->send_packet(packet);
+            session.socket->send_packet(message);
         }
         else
         {
             // Client offline.
             // Do retain things.
-            session.retain_message(packet);
+            session.retain_message(message);
         }
     }
+
+    // Do retain things related to subscription manager.
+    sub_mgr.retain_message(packet.v_header.topic_name, packet);
 
     // Do QoS ack things.
     return std::vector<uint8_t>();
