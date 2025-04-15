@@ -54,5 +54,7 @@ public:
         {
             packet.push_back(message[i]);
         }
+
+        return packet;
     };
 };
