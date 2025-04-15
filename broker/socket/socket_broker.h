@@ -4,6 +4,7 @@
 #include <string>
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
+#include "publish_packet.h"
 
 
 class socket_broker : public std::enable_shared_from_this<socket_broker>
