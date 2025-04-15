@@ -41,6 +41,5 @@ public:
     }
     void debug();
     
-    static std::unique_ptr<suback_packet> parse(const uint8_t* data, size_t size);
     static std::unique_ptr<suback_packet> create(uint16_t packet_identifier, std::vector<uint8_t> return_code);
 };
