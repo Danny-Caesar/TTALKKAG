@@ -15,7 +15,7 @@ public:
         std::string topic_name;
         uint16_t packet_identifier;
 
-        static variable_header parse(const uint8_t* data, size_t size);
+        static variable_header parse(const uint8_t* data, size_t size, uint8_t qos);
         void debug();
     } v_header;
     std::string message;
@@ -31,11 +31,17 @@ public:
         std::vector<uint8_t> packet;
         
         // 1. Fixed header
-        packet.push_back(0x20 | (dup << 3) | (qos << 1) | retain); // PUBLISH (2 << 4), DUP, QoS, Retain
+        // PUBLISH (3 << 4), DUP, QoS, Retain
+        packet.push_back(0x30 | (dup << 3) | (qos << 1) | retain);
+        // Remaining length
+        uint16_t topic_len = v_header.topic_name.length();
+        uint32_t remaining_len = 2 + topic_len + message.length();
+        if(qos > 0) remaining_len += 2;
+        std::vector<uint8_t> remaining_len_bytes = fixed_header::encode_remaining_length(remaining_len);
+        packet.insert(packet.end(), remaining_len_bytes.begin(), remaining_len_bytes.end());
 
         // 2. Variable header
         // Topic name length
-        uint16_t topic_len = v_header.topic_name.length();
         packet.push_back((topic_len >> 8) & 0xFF);
         packet.push_back(topic_len & 0xFF);
         // Topic name
@@ -44,9 +50,12 @@ public:
             packet.push_back(v_header.topic_name[i]);
         }
         // Packet identifier
-        uint16_t packet_id = v_header.packet_identifier;
-        packet.push_back((packet_id >> 8) & 0xFF);
-        packet.push_back(packet_id & 0xFF);
+        if(qos > 0)
+        {
+            uint16_t packet_id = v_header.packet_identifier;
+            packet.push_back((packet_id >> 8) & 0xFF);
+            packet.push_back(packet_id & 0xFF);
+        }
 
         // 3. Payload
         // Application message
