@@ -34,6 +34,7 @@ std::unique_ptr<mqtt_control_packet> mqtt_control_packet::mqtt_control_packet::p
             return disconnect_packet::parse(payload, header.remaining_length);
         case mqtt_packet_type::CONNACK:
         case mqtt_packet_type::SUBACK:
+        case mqtt_packet_type::UNSUBACK:
             return NULL;
         default:
             throw std::runtime_error("Unsupported packet type");
