@@ -59,13 +59,12 @@ std::vector<uint8_t> packet_handler::handle_connect(connect_packet& packet, std:
             std::string client_id = packet.client_id;
             session_present = true;
             
+            // Open session.
             ses_mgr.open_session(client_id, std::move(socket));
 
+            // Send messages retained in session
             mqtt_session session = ses_mgr.get_session(client_id);
-
-            // Get messages retained in session
-            // Set flags (Dup, QoS, Retain)
-            // Transmit messages
+            session.flush_message();
         }
         else
         {
@@ -94,8 +93,13 @@ std::vector<uint8_t> packet_handler::handle_publish(publish_packet& packet)
     subscription_manager& sub_mgr = subscription_manager::get_instance();
     session_manager& ses_mgr = session_manager::get_instance();
 
+    // Do retain things related to subscription manager.
+    sub_mgr.retain_message(packet.v_header.topic_name, packet);
+    
     // Get subscriptions related to the topic.
-    std::vector<subscription> subs = sub_mgr.get_subscribers(packet.v_header.topic_name);
+    std::vector<subscription> subs = sub_mgr.get_subscription(packet.v_header.topic_name);
+
+    // Do retain things related to each subscriptions.
     for(subscription sub : subs)
     {
         // Get session of subscriber.
@@ -107,16 +111,18 @@ std::vector<uint8_t> packet_handler::handle_publish(publish_packet& packet)
 
         if(session.client_connect)
         {
+            // Client online.
             session.socket->send_packet(packet);
         }
         else
         {
+            // Client offline.
             // Do retain things.
             session.retain_message(packet);
         }
     }
 
-    // Do QoS ack things
+    // Do QoS ack things.
     return std::vector<uint8_t>();
 }
 
