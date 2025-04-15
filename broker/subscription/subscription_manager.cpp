@@ -34,7 +34,8 @@ void subscription_manager::add_subscription(const std::string& topic, const std:
     else
     {
         // Add new subscription.
-        subs.push_back(subscription{ client_id, qos });
+        subscription sub{client_id, qos};
+        subs.push_back(sub);
     }
 }
 
@@ -63,8 +64,8 @@ void subscription_manager::remove_subscription(const std::string& topic, const s
     }
 }
 
-// Return subscribers of specific topic.
-std::vector<subscription> subscription_manager::get_subscribers(const std::string& topic)
+// Return subscriptions of specific topic.
+std::vector<subscription> subscription_manager::get_subscription(const std::string& topic)
 {
     // Check if the topic exists in the subscription map
     auto it = _subscription_map.find(topic);
@@ -72,6 +73,17 @@ std::vector<subscription> subscription_manager::get_subscribers(const std::strin
         return std::vector<subscription>();
 
     return it->second;
+}
+
+// Return subscription by topic and client id
+subscription* subscription_manager::get_subscription(const std::string& topic, const std::string& client_id)
+{
+    for(subscription& sub : _subscription_map[topic])
+    {
+        if(sub.client_id == client_id) return &sub;
+    }
+
+    return NULL;
 }
 
 // Get topics client subscribing.
@@ -94,9 +106,9 @@ std::vector<std::string> subscription_manager::get_topics(const std::string& cli
     return topics;
 }
 
-void subscription_manager::retain_message(const std::string& topic, const publish_packet& message)
-{
-    _message_map[topic] = message;
+void subscription_manager::retain_message(const std::string& topic, publish_packet& message)
+        {
+                        _message_map[topic] = message;
 }
 
 void subscription_manager::remove_message(const std::string& topic)

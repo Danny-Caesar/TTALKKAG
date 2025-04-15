@@ -11,10 +11,11 @@ public:
     void add_subscription(const std::string& topic, const std::string& client_id, uint8_t qos);
     void remove_subscription(const std::string& topic, const std::string& client_id);
     
-    std::vector<subscription> get_subscribers(const std::string& topic);
+    std::vector<subscription> get_subscription(const std::string& topic);
+    subscription* get_subscription(const std::string& topic, const std::string& client_id);
     std::vector<std::string> get_topics(const std::string& client_id);
 
-    void retain_message(const std::string& topic, const publish_packet& message);
+    void retain_message(const std::string& topic, publish_packet& packet);
     void remove_message(const std::string& topic);
     publish_packet get_retained_message(const std::string& topic);
 
