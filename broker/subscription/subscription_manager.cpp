@@ -106,9 +106,33 @@ std::vector<std::string> subscription_manager::get_topics(const std::string& cli
     return topics;
 }
 
-void subscription_manager::retain_message(const std::string& topic, publish_packet& message)
+void subscription_manager::retain_message(const std::string& topic, publish_packet& packet)
+{
+    if(packet.retain)
+    {
+        if(packet.message.size() == 0){
+            // Discard current message.
+            // Discard message retained.
+            _message_map.erase(topic);
+            return;
+        }
+
+        // Set retain.
+        packet.retain = 0;
+
+        if(packet.qos > 0)
         {
-                        _message_map[topic] = message;
+            // Overwrite retained message.
+            _message_map[topic] = packet;
+        }
+        else
+        {
+            // Discard retained message.
+            _message_map[topic] = packet;
+        }
+    }
+
+    // Nothing happens when retain is 0.
 }
 
 void subscription_manager::remove_message(const std::string& topic)
@@ -118,7 +142,7 @@ void subscription_manager::remove_message(const std::string& topic)
 
 publish_packet subscription_manager::get_retained_message(const std::string& topic)
 {
-    
+    return _message_map[topic];
 }
 
 void subscription_manager::debug()
