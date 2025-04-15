@@ -14,6 +14,7 @@ public:
         void debug();
     } v_header;
     std::vector<uint8_t> return_code;
+
 public:
     mqtt_packet_type type() const override { return mqtt_packet_type::SUBACK; }
     std::vector<uint8_t> serialize() const
@@ -33,7 +34,7 @@ public:
 
         // 3. Payload
         // Return code
-        for(auto rc : return_code)
+        for(uint8_t rc : return_code)
             packet.push_back(rc);
 
         return packet;

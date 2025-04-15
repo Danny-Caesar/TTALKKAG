@@ -106,7 +106,7 @@ std::vector<uint8_t> packet_handler::handle_publish(publish_packet& packet)
         mqtt_session session = ses_mgr.get_session(sub.client_id);
         
         // Decide QoS
-        uint8_t qos = std::min((uint8_t)(packet.qos | 0x03), sub.qos);
+        uint8_t qos = std::min(packet.qos, sub.qos);
         packet.qos = qos;
 
         if(session.client_connect)
@@ -156,9 +156,14 @@ std::vector<uint8_t> packet_handler::handle_subscribe(subscribe_packet& packet, 
     {
         // Get retained messages related to topics.
         publish_packet message = sub_mgr.get_retained_message(packet.topic_filter[i]);
+
+        // Do not send if payload empty.
+        if(message.message.empty()) continue;
+
         // Decide QoS and set flags.
-        uint8_t qos = std::min((uint8_t)(message.qos | 0x03), packet.qos_request[i]);
+        uint8_t qos = std::min(message.qos, packet.qos_request[i]);
         message.qos = qos;
+        message.retain = 1;
         // Transmit messages
         socket->send_packet(message);
     }

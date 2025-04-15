@@ -8,8 +8,8 @@ std::unique_ptr<publish_packet> publish_packet::parse(const uint8_t* data, size_
 
     // 1. Fixed header
     packet->dup = 0;
-    packet->qos = (flags >> 1) | 0x03;
-    packet->retain = flags | 0x01;
+    packet->qos = (flags >> 1) & 0x03;
+    packet->retain = flags & 0x01;
     
     // 2. Variable header
     packet->v_header = publish_packet::variable_header::parse(data, size);
