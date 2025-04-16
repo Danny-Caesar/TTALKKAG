@@ -1,4 +1,5 @@
 #include "unsubscribe_packet.h"
+#include<algorithm>
 
 std::unique_ptr<unsubscribe_packet> unsubscribe_packet::parse(const uint8_t* data, size_t size)
 {
@@ -19,7 +20,7 @@ std::unique_ptr<unsubscribe_packet> unsubscribe_packet::parse(const uint8_t* dat
         if (size < index + 2) throw std::runtime_error("Malformed payload: Wrong topic filter length.");
         uint16_t length = (data[index] << 8) | data[index + 1];
         index += 2;
-        
+
         // Topic filter
         if (size < index + length) throw std::runtime_error("Malformed payload: Wrong topic filter.");
         packet->topic_filter.push_back(std::string(reinterpret_cast<const char*>(&data[index]), length));
@@ -43,7 +44,7 @@ void unsubscribe_packet::debug()
     std::cout << "----Unsubscribe packet----\n";
     v_header.debug();
     std::cout << "---Payload---\n";
-    std::cout << "topic filter: \n";
+    std::cout << "--topic filter--\n";
     for(auto tf : topic_filter)
     {
         std::cout << tf << '\n';
