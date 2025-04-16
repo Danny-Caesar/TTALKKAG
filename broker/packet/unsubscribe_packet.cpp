@@ -1,5 +1,4 @@
 #include "unsubscribe_packet.h"
-#include<algorithm>
 
 std::unique_ptr<unsubscribe_packet> unsubscribe_packet::parse(const uint8_t* data, size_t size)
 {
