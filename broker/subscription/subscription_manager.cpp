@@ -160,18 +160,39 @@ void subscription_manager::debug()
     std::cout << '\n';
 }
 
-void subscription_manager::debug(const std::string& topic)
+void subscription_manager::debug(const std::string& value, int type)
 {
     std::cout << "----Subscription list----\n";
-    auto it_topic = _subscription_map.find(topic);
-
-    std::cout << "---" << it_topic->first << "---\n";
-
-    for(auto it_client = it_topic->second.begin(); it_client != it_topic->second.end(); it_client++)
+    // Topic
+    if(type == 0)
     {
-        std::cout << it_client->client_id << '(' << (int)it_client->qos << ")\n";
+        auto it_topic = _subscription_map.find(value);
+    
+        std::cout << "---" << it_topic->first << "---\n";
+    
+        for(auto it_client = it_topic->second.begin(); it_client != it_topic->second.end(); it_client++)
+        {
+            std::cout << it_client->client_id << '(' << (int)it_client->qos << ")\n";
+        }
+        std::cout << '\n';
     }
-    std::cout << '\n';
+    // Client
+    else if(type == 1)
+    {
+        std::cout << "---" << value << "---\n";
+            for(auto it_topic = _subscription_map.begin(); it_topic != _subscription_map.end(); it_topic++)
+            {
+                for(auto it_client = it_topic->second.begin(); it_client != it_topic->second.end(); it_client++)
+                {
+                    if(it_client->client_id == value)
+                    {   
+                        std::cout << it_topic->first << '(' << (int)it_client->qos << ")\n";
+                        break;
+                    }
+                }
+            }
+            std::cout << '\n';
+    }
 }
 
 // void subscription_manager::debug(const std::string& client_id)

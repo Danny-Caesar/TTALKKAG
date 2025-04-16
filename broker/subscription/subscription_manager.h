@@ -22,7 +22,7 @@ public:
     publish_packet get_retained_message(const std::string& topic);
 
     void debug();
-    void debug(const std::string& topic);
+    void debug(const std::string& value, int type);
     // void debug(const std::string& client_id);
     // subscription get_subscribtion(const std::string& topic, const std::string& client_id);
 
