@@ -17,6 +17,8 @@ std::vector<uint8_t> packet_handler::handle(const uint8_t* data, size_t size, st
             return handle_publish(static_cast<publish_packet&>(*packet));
         case mqtt_packet_type::SUBSCRIBE:
             return handle_subscribe(static_cast<subscribe_packet&>(*packet), socket);
+        case mqtt_packet_type::UNSUBSCRIBE:
+            return handle_unsubscribe(static_cast<unsubscribe_packet&>(*packet), socket);
         case mqtt_packet_type::DISCONNECT:
             return handle_disconnect(socket);
         default:
@@ -152,9 +154,9 @@ std::vector<uint8_t> packet_handler::handle_subscribe(subscribe_packet& packet, 
         // Decide return code.
         return_code.push_back(packet.qos_request[i]);
 
-        // Debug subscription insertion.
-        sub_mgr.debug(packet.topic_filter[i]);
     }
+    // Debug subscription insertion.
+    sub_mgr.debug(socket->get_client_id(), 1);
     
     // 2. Transmit retained messages
     for(size_t i = 0; i < packet.topic_filter.size(); i++)
@@ -182,6 +184,27 @@ std::vector<uint8_t> packet_handler::handle_subscribe(subscribe_packet& packet, 
     suback->debug();
 
     return bytes;
+}
+
+std::vector<uint8_t> packet_handler::handle_unsubscribe(unsubscribe_packet& packet, std::shared_ptr<socket_broker> socket)
+{
+    packet.debug();
+
+    // 1. Get manager instance.
+    subscription_manager& sub_mgr = subscription_manager::get_instance();
+
+    // 2. Unsubscribe.
+    for(auto tf : packet.topic_filter)
+    {
+        sub_mgr.remove_subscription(tf, socket->get_client_id());
+    }
+
+    // Debug subscription elimination.
+    sub_mgr.debug(socket->get_client_id(), 1);
+
+    // 3. Transmit suback.
+    auto suback = unsuback_packet::create(packet.v_header.packet_identifier);
+    return suback->serialize();
 }
 
 std::vector<uint8_t> packet_handler::handle_disconnect(std::shared_ptr<socket_broker> socket)
