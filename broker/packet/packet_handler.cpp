@@ -17,6 +17,8 @@ std::vector<uint8_t> packet_handler::handle(const uint8_t* data, size_t size, st
             return handle_publish(static_cast<publish_packet&>(*packet));
         case mqtt_packet_type::SUBSCRIBE:
             return handle_subscribe(static_cast<subscribe_packet&>(*packet), socket);
+        case mqtt_packet_type::UNSUBSCRIBE:
+            return handle_unsubscribe(static_cast<unsubscribe_packet&>(*packet), socket);
         case mqtt_packet_type::DISCONNECT:
             return handle_disconnect(socket);
         default:
@@ -30,47 +32,52 @@ std::vector<uint8_t> packet_handler::handle_connect(connect_packet& packet, std:
     packet.debug();
 
     // Get manager instnaces
-    session_manager& session_mgr = session_manager::get_instance();
+    session_manager& ses_mgr = session_manager::get_instance();
 
     bool session_present;
     uint8_t return_code = 0;
 
     // Version check
     if(packet.v_header.protocol_name != "MQTT" || packet.v_header.protocol_level != 0x04)
+    {
         return_code = 0x01;
+    }
 
     // Handle clean session
     if(packet.v_header.connect_flags.clean_session)
     {
         session_present = false;
 
-        session_mgr.register_session(packet.client_id, std::make_unique<mqtt_session>(packet, std::move(socket)));
+        ses_mgr.register_session(packet.client_id, std::make_unique<mqtt_session>(packet, std::move(socket)));
     }
     else
     {
         // Register new session if client not duplicated.
-        if((session_mgr.has_session(packet.client_id)))
+        if((ses_mgr.has_session(packet.client_id)))
         {
             // Connect would be rejected(0x02) if values of new connect packet are different form stated session.
             // Later...
 
+            std::string client_id = packet.client_id;
             session_present = true;
             
-            session_mgr.open_session(packet.client_id, std::move(socket));
+            // Open session.
+            ses_mgr.open_session(client_id, std::move(socket));
 
-            // Send untransmitted messages.
-            // Later...
+            // Send messages retained in session
+            mqtt_session session = ses_mgr.get_session(client_id);
+            session.flush_message();
         }
         else
         {
             session_present = false;
 
-            session_mgr.register_session(packet.client_id, std::make_unique<mqtt_session>(packet, std::move(socket)));
+            ses_mgr.register_session(packet.client_id, std::make_unique<mqtt_session>(packet, std::move(socket)));
         }
     }
 
     // Debug session
-    session_mgr.debug();
+    ses_mgr.debug();
 
     // Create reply packet.
     auto connack = connack_packet::create(session_present, return_code);
@@ -81,81 +88,144 @@ std::vector<uint8_t> packet_handler::handle_connect(connect_packet& packet, std:
 
 std::vector<uint8_t> packet_handler::handle_publish(publish_packet& packet)
 {
-    std::cout << "message: " << packet.message << "\n\n";
+    // Debug packet
+    packet.debug();
 
+    // Get manager instances.
+    subscription_manager& sub_mgr = subscription_manager::get_instance();
+    session_manager& ses_mgr = session_manager::get_instance();
+    
+    // Get subscriptions related to the topic.
+    std::vector<subscription> subs = sub_mgr.get_subscription(packet.v_header.topic_name);
+
+    // Do retain things related to each subscriptions.
+    for(subscription sub : subs)
+    {
+        // Get session of subscriber.
+        mqtt_session session = ses_mgr.get_session(sub.client_id);
+
+        publish_packet message = packet;
+        
+        // Decide QoS
+        uint8_t qos = std::min(message.qos, sub.qos);
+        message.qos = qos;
+
+        // Set retain.
+        message.retain = 0;
+
+        if(session.client_connect)
+        {
+            // Client online.
+            session.socket->send_packet(message);
+        }
+        else
+        {
+            // Client offline.
+            // Do retain things.
+            session.retain_message(message);
+        }
+    }
+
+    // Do retain things related to subscription manager.
+    sub_mgr.retain_message(packet.v_header.topic_name, packet);
+
+    // Do QoS ack things.
     return std::vector<uint8_t>();
 }
 
 std::vector<uint8_t> packet_handler::handle_subscribe(subscribe_packet& packet, std::shared_ptr<socket_broker> socket)
 {
-    // // Debug subscribe packet
-    // packet.debug();
+    // Debug subscribe packet.
+    packet.debug();
 
-    // // Get manager instances.
-    // session_manager& session_mgr = session_manager::get_instance();
-    // subscription_manager& sub_mgr = subscription_manager::get_instance();
+    // Get manager instances.
+    subscription_manager& sub_mgr = subscription_manager::get_instance();
 
-    // // 1. Add or update subscription
-    // for(size_t i = 0; i < packet.topic_filter.size(); i++)
-    // {
-    //     sub_mgr.add_subscription(packet.topic_filter[i], socket.get_clinet_id(), packet.qos_request[i]);
-    // }
+    // 1. Add or update subscriptions.
+    std::vector<uint8_t> return_code;
+    for(size_t i = 0; i < packet.topic_filter.size(); i++)
+    {
+        // Validate topic filter.
+        // Set return code 0x80 if topic filter not validate.
+
+        // Add subscription.
+        sub_mgr.add_subscription(packet.topic_filter[i], socket->get_client_id(), packet.qos_request[i]);
+
+        // Decide return code.
+        return_code.push_back(packet.qos_request[i]);
+
+    }
+    // Debug subscription insertion.
+    sub_mgr.debug(socket->get_client_id(), 1);
     
-    // // 2. Decide return code.
-    // std::vector<uint8_t> return_code;
-    // for(auto tf = packet.topic_filter.begin(); tf != packet.topic_filter.end(); tf++)
-    // {
+    // 2. Transmit retained messages
+    for(size_t i = 0; i < packet.topic_filter.size(); i++)
+    {
+        // Get retained messages related to topics.
+        publish_packet message = sub_mgr.get_retained_message(packet.topic_filter[i]);
 
-    //     auto subs = sub_mgr.get_subscribers(*tf);
+        // Do not send if payload empty.
+        if(message.message.empty()) continue;
 
-    //     auto it = std::find_if(subs.begin(), subs.end(), [&](const subscription s)
-    //     {
-    //         return s.client_id == socket.get_clinet_id();
-    //     });
+        // Decide QoS and set flags.
+        uint8_t qos = std::min(message.qos, packet.qos_request[i]);
+        message.qos = qos;
+        message.retain = 1;
+        // Transmit messages
+        socket->send_packet(message);
+    }
 
-    //     // Set return code.
-    //     if(it != subs.end())
-    //     {
-    //         // Set return code as a qos level of the subscription.
-    //         return_code.push_back(it->qos);
-    //     }
-    //     else
-    //     {
-    //         // Subscribe failure.
-    //         return_code.push_back(0x80);
-    //     }
-    // }
-    
-    // // 3. Reply suback packet.
-    // std::unique_ptr<suback_packet> suback = suback_packet::create(packet.v_header.packet_identifier, return_code);
-    // auto bytes = suback->serialize();
+    // 3. Reply suback packet.
+    std::unique_ptr<suback_packet> suback = suback_packet::create(packet.v_header.packet_identifier, return_code);
+    auto bytes = suback->serialize();
 
-    // // Debug suback packet
-    // fixed_header::parse(bytes.data(), bytes.size()).debug();
-    // suback->debug();
+    // Debug suback packet
+    fixed_header::parse(bytes.data(), bytes.size()).debug();
+    suback->debug();
 
-    // return bytes;
+    return bytes;
+}
+
+std::vector<uint8_t> packet_handler::handle_unsubscribe(unsubscribe_packet& packet, std::shared_ptr<socket_broker> socket)
+{
+    packet.debug();
+
+    // 1. Get manager instance.
+    subscription_manager& sub_mgr = subscription_manager::get_instance();
+
+    // 2. Unsubscribe.
+    for(auto tf : packet.topic_filter)
+    {
+        sub_mgr.remove_subscription(tf, socket->get_client_id());
+    }
+
+    // Debug subscription elimination.
+    sub_mgr.debug(socket->get_client_id(), 1);
+
+    // 3. Transmit suback.
+    auto suback = unsuback_packet::create(packet.v_header.packet_identifier);
+    return suback->serialize();
 }
 
 std::vector<uint8_t> packet_handler::handle_disconnect(std::shared_ptr<socket_broker> socket)
 {
     // Get manager instance.
-    session_manager& session_mgr = session_manager::get_instance();
+    session_manager& ses_mgr = session_manager::get_instance();
 
     // 1. Disconnect client and close socket.
     std::string client_id = socket->get_client_id();
-    if(session_mgr.is_clean_session(client_id))
+    if(ses_mgr.is_clean_session(client_id))
     {
-        session_mgr.remove_session(client_id);
+        ses_mgr.remove_session(client_id);
     }
     else
     {
-        session_mgr.close_session(client_id);
+        ses_mgr.close_session(client_id);
         // Discard will message.
         // Later...
     }
 
-    session_mgr.debug();
+    ses_mgr.debug();
 
     return std::vector<uint8_t>();
 }

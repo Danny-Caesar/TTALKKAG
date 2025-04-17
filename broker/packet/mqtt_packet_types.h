@@ -10,6 +10,8 @@ enum class mqtt_packet_type : uint8_t
     PUBACK      = 4,
     SUBSCRIBE   = 8,
     SUBACK      = 9,
+    UNSUBSCRIBE = 10,
+    UNSUBACK    = 11,
     PINGREQ     = 12,
     PINGRESP    = 13,
     DISCONNECT  = 14,

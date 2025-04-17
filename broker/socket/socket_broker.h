@@ -4,6 +4,7 @@
 #include <string>
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
+#include "publish_packet.h"
 
 
 class socket_broker : public std::enable_shared_from_this<socket_broker>
@@ -19,6 +20,8 @@ public:
     void start_accept();
     void start();
     void close();
+
+    void send_packet(const publish_packet& packet);
 
     void set_client_id(std::string client_id);
     std::string get_client_id();

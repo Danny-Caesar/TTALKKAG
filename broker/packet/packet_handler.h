@@ -7,6 +7,8 @@
 #include "publish_packet.h"
 #include "subscribe_packet.h"
 #include "suback_packet.h"
+#include "unsubscribe_packet.h"
+#include "unsuback_packet.h"
 #include "socket_broker.h"
 
 
@@ -20,5 +22,6 @@ private:
     static std::vector<uint8_t> handle_connect(connect_packet& packet, std::shared_ptr<socket_broker> socket);
     static std::vector<uint8_t> handle_publish(publish_packet& packet);
     static std::vector<uint8_t> handle_subscribe(subscribe_packet& packet, std::shared_ptr<socket_broker> socket);
+    static std::vector<uint8_t> handle_unsubscribe(unsubscribe_packet& packet, std::shared_ptr<socket_broker> socket);
     static std::vector<uint8_t> handle_disconnect(std::shared_ptr<socket_broker> socket);
 };

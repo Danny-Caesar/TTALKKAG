@@ -30,6 +30,15 @@ void socket_broker::start()
     read();
 }
 
+void socket_broker::send_packet(const publish_packet& packet)
+{
+    // Do not transmit if socket is closed
+    if(!_socket.is_open()) return;
+
+    auto bytes = packet.serialize();
+    write(bytes.data(), bytes.size());
+}
+
 // Asynchronously read receive buffer of socket.
 void socket_broker::read()
 {
@@ -56,7 +65,7 @@ void socket_broker::read_complete(
         if(ec == boost::asio::error::eof)
             std::cout << "Client disconnected.\n";
         else
-            std::cout << ec.message().c_str() << '\n';
+            std::cout << "socket(" << _client_id << "): " << ec.message().c_str() << '\n';
         
         close();
     }
@@ -79,6 +88,9 @@ void socket_broker::read_complete(
         // Do transaction.
         transactor(_receive_buffer, bytes_received);
     
+        // Stop if client disconnected.
+        if(!_socket.is_open()) return;
+
         // Read next data.
         read();
     }

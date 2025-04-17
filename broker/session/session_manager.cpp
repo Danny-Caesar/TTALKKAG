@@ -32,6 +32,11 @@ void session_manager::remove_session(const std::string& client_id)
     _session_map.erase(client_id);
 }
 
+mqtt_session& session_manager::get_session(const std::string& client_id)
+{
+    return *_session_map[client_id];
+}
+
 void session_manager::open_session(const std::string& client_id, std::shared_ptr<socket_broker> socket)
 {
     socket->set_client_id(_session_map[client_id]->client_id);

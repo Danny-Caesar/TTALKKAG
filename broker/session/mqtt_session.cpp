@@ -1,6 +1,10 @@
 #include "mqtt_session.h"
+#include "../subscription/subscription_manager.h"
 
-mqtt_session::mqtt_session(connect_packet packet, std::shared_ptr<socket_broker> socket)
+// Initialization
+std::unordered_map<std::string, publish_packet> mqtt_session::_message_map;
+
+mqtt_session::mqtt_session(connect_packet& packet, std::shared_ptr<socket_broker> socket)
 {
     client_connect = true;
     clean_session = packet.v_header.connect_flags.clean_session;
@@ -28,6 +32,63 @@ void mqtt_session::close_session()
 {
     client_connect = false;
     socket->close();
+}
+
+// Handle message according retain flag
+void mqtt_session::retain_message(publish_packet& packet)
+{
+    std::string topic_name = packet.v_header.topic_name;
+
+    if(packet.retain)
+    {
+        if(packet.message.size() == 0){
+            // Discard current message.
+            // Discard message retained.
+            _message_map.erase(topic_name);
+            return;
+        }
+
+        // Set retain.
+        packet.retain = 0;
+
+        if(packet.qos > 0)
+        {
+            // Overwrite retained message.
+            _message_map[topic_name] = packet;
+        }
+        else
+        {
+            // Discard retained message.
+            _message_map[topic_name] = packet;
+        }
+    }
+
+    // Nothing happens when retain is 0.
+}
+
+// Send all messages retained while client was offline.
+void mqtt_session::flush_message()
+{
+    if(!client_connect) return;
+
+    subscription_manager& sub_mgr = subscription_manager::get_instance();
+
+    for(auto it : _message_map)
+    {
+        std::string topic_name = it.first;
+        publish_packet message = it.second;
+
+        // Decide QoS.
+        subscription sub = *sub_mgr.get_subscription(topic_name, client_id);
+        message.qos = std::min(message.qos, sub.qos);
+
+        // Unset retain.
+        message.retain = 0;
+
+        socket->send_packet(it.second);
+    }
+
+    _message_map.clear();
 }
 
 void mqtt_session::debug()
