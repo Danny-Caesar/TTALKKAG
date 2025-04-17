@@ -186,7 +186,7 @@ void subscription_manager::debug(const std::string& value, int type)
                 {
                     if(it_client->client_id == value)
                     {   
-                        std::cout << it_topic->first << '(' << (int)it_client->qos << ")\n";
+                        std::cout << it_topic->first << "(QoS: " << (int)it_client->qos << ")\n";
                         break;
                     }
                 }
