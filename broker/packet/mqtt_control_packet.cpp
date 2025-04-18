@@ -5,6 +5,7 @@
 #include "puback_packet.h"
 #include "subscribe_packet.h"
 #include "unsubscribe_packet.h"
+#include "pingreq_packet.h"
 #include "disconnect_packet.h"
 
 std::unique_ptr<mqtt_control_packet> mqtt_control_packet::mqtt_control_packet::parse(const uint8_t* data, size_t size)
@@ -33,11 +34,14 @@ std::unique_ptr<mqtt_control_packet> mqtt_control_packet::mqtt_control_packet::p
             return subscribe_packet::parse(payload, header.remaining_length);
         case mqtt_packet_type::UNSUBSCRIBE:
             return unsubscribe_packet::parse(payload, header.remaining_length);
+        case mqtt_packet_type::PINGREQ:
+            return pingreq_packet::parse(payload, header.remaining_length);
         case mqtt_packet_type::DISCONNECT:
             return disconnect_packet::parse(payload, header.remaining_length);
         case mqtt_packet_type::CONNACK:
         case mqtt_packet_type::SUBACK:
         case mqtt_packet_type::UNSUBACK:
+        case mqtt_packet_type::PINGRESP:
             return NULL;
         default:
             throw std::runtime_error("Unsupported packet type");
