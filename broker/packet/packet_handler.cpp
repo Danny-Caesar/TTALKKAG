@@ -32,7 +32,7 @@ std::vector<uint8_t> packet_handler::handle(const uint8_t* data, size_t size, st
 
 std::vector<uint8_t> packet_handler::handle_connect(connect_packet& packet, std::shared_ptr<socket_broker> socket)
 {
-    packet.debug();
+    // packet.debug();
 
     // Get manager instnaces
     session_manager& ses_mgr = session_manager::get_instance();
@@ -80,7 +80,7 @@ std::vector<uint8_t> packet_handler::handle_connect(connect_packet& packet, std:
     }
 
     // Debug session
-    ses_mgr.debug();
+    // ses_mgr.debug();
 
     // Create reply packet.
     auto connack = connack_packet::create(session_present, return_code);
@@ -92,12 +92,20 @@ std::vector<uint8_t> packet_handler::handle_connect(connect_packet& packet, std:
 std::vector<uint8_t> packet_handler::handle_publish(publish_packet& packet, std::shared_ptr<socket_broker> socket)
 {
     // Debug packet
-    packet.debug();
+    // packet.debug();
 
     // Get manager instances.
     subscription_manager& sub_mgr = subscription_manager::get_instance();
     session_manager& ses_mgr = session_manager::get_instance();
+    packet_identifier_manager& pid_mgr = packet_identifier_manager::get_instance();
     
+    // Puback
+    if(packet.qos > 0)
+    {
+        auto puback = puback_packet::create(packet.v_header.packet_identifier);
+        socket->send_packet(*puback);
+    }
+
     // Get subscriptions related to the topic.
     std::vector<subscription> subs = sub_mgr.get_subscription(packet.v_header.topic_name);
 
@@ -112,6 +120,19 @@ std::vector<uint8_t> packet_handler::handle_publish(publish_packet& packet, std:
         // Decide QoS
         uint8_t qos = std::min(message.qos, sub.qos);
         message.qos = qos;
+        
+        // Set packet id
+        uint16_t pid;
+        if(qos > 0)
+        {
+            pid = pid_mgr.issue_packet_identifier(qos);
+            // pid_mgr.debug();
+        }
+        else
+        {
+            pid = 0;
+        }
+        message.v_header.packet_identifier = pid;
 
         // Set retain.
         message.retain = 0;
@@ -124,7 +145,6 @@ std::vector<uint8_t> packet_handler::handle_publish(publish_packet& packet, std:
         else
         {
             // Client offline.
-            // Do retain things.
             session.retain_message(message);
         }
     }
@@ -157,12 +177,15 @@ std::vector<uint8_t> packet_handler::handle_puback(puback_packet& packet, std::s
     {
         // Exception
     }
+
+    // pid_mgr.debug();
+
+    return std::vector<uint8_t>();
 }
 
 std::vector<uint8_t> packet_handler::handle_subscribe(subscribe_packet& packet, std::shared_ptr<socket_broker> socket)
 {
-    // Debug subscribe packet.
-    packet.debug();
+    // packet.debug();
 
     // Get manager instances.
     subscription_manager& sub_mgr = subscription_manager::get_instance();
@@ -181,8 +204,7 @@ std::vector<uint8_t> packet_handler::handle_subscribe(subscribe_packet& packet, 
         return_code.push_back(packet.qos_request[i]);
 
     }
-    // Debug subscription insertion.
-    sub_mgr.debug(socket->get_client_id(), 1);
+    // sub_mgr.debug(socket->get_client_id(), 1);
     
     // 2. Transmit retained messages
     for(size_t i = 0; i < packet.topic_filter.size(); i++)
@@ -205,16 +227,15 @@ std::vector<uint8_t> packet_handler::handle_subscribe(subscribe_packet& packet, 
     std::unique_ptr<suback_packet> suback = suback_packet::create(packet.v_header.packet_identifier, return_code);
     auto bytes = suback->serialize();
 
-    // Debug suback packet
-    fixed_header::parse(bytes.data(), bytes.size()).debug();
-    suback->debug();
+    // fixed_header::parse(bytes.data(), bytes.size()).debug();
+    // suback->debug();
 
     return bytes;
 }
 
 std::vector<uint8_t> packet_handler::handle_unsubscribe(unsubscribe_packet& packet, std::shared_ptr<socket_broker> socket)
 {
-    packet.debug();
+    // packet.debug();
 
     // 1. Get manager instance.
     subscription_manager& sub_mgr = subscription_manager::get_instance();
@@ -225,8 +246,7 @@ std::vector<uint8_t> packet_handler::handle_unsubscribe(unsubscribe_packet& pack
         sub_mgr.remove_subscription(tf, socket->get_client_id());
     }
 
-    // Debug subscription elimination.
-    sub_mgr.debug(socket->get_client_id(), 1);
+    // sub_mgr.debug(socket->get_client_id(), 1);
 
     // 3. Transmit suback.
     auto suback = unsuback_packet::create(packet.v_header.packet_identifier);
@@ -251,7 +271,7 @@ std::vector<uint8_t> packet_handler::handle_disconnect(std::shared_ptr<socket_br
         // Later...
     }
 
-    ses_mgr.debug();
+    // ses_mgr.debug();
 
     return std::vector<uint8_t>();
 }
