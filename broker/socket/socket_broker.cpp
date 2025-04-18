@@ -35,7 +35,16 @@ void socket_broker::send_packet(const publish_packet& packet)
     // Do not transmit if socket is closed
     if(!_socket.is_open()) return;
 
-    auto bytes = packet.serialize();
+    std::vector<uint8_t> bytes = packet.serialize();
+    write(bytes.data(), bytes.size());
+}
+
+void socket_broker::send_packet(const puback_packet& packet)
+{
+    // Do not transmit if socket is closed
+    if(!_socket.is_open()) return;
+
+    std::vector<uint8_t> bytes = packet.serialize();
     write(bytes.data(), bytes.size());
 }
 

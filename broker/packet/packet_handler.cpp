@@ -1,6 +1,7 @@
 #include <stdexcept>
 #include <iostream>
 #include "packet_handler.h"
+#include "packet_identifier_manager.h"
 #include "../session/session_manager.h"
 #include "../subscription/subscription_manager.h"
 
@@ -14,7 +15,9 @@ std::vector<uint8_t> packet_handler::handle(const uint8_t* data, size_t size, st
         case mqtt_packet_type::CONNECT:
             return handle_connect(static_cast<connect_packet&>(*packet), socket);
         case mqtt_packet_type::PUBLISH:
-            return handle_publish(static_cast<publish_packet&>(*packet));
+            return handle_publish(static_cast<publish_packet&>(*packet), socket);
+        case mqtt_packet_type::PUBACK:
+            return handle_puback(static_cast<puback_packet&>(*packet), socket);
         case mqtt_packet_type::SUBSCRIBE:
             return handle_subscribe(static_cast<subscribe_packet&>(*packet), socket);
         case mqtt_packet_type::UNSUBSCRIBE:
@@ -29,7 +32,7 @@ std::vector<uint8_t> packet_handler::handle(const uint8_t* data, size_t size, st
 
 std::vector<uint8_t> packet_handler::handle_connect(connect_packet& packet, std::shared_ptr<socket_broker> socket)
 {
-    packet.debug();
+    // packet.debug();
 
     // Get manager instnaces
     session_manager& ses_mgr = session_manager::get_instance();
@@ -77,7 +80,7 @@ std::vector<uint8_t> packet_handler::handle_connect(connect_packet& packet, std:
     }
 
     // Debug session
-    ses_mgr.debug();
+    // ses_mgr.debug();
 
     // Create reply packet.
     auto connack = connack_packet::create(session_present, return_code);
@@ -86,15 +89,23 @@ std::vector<uint8_t> packet_handler::handle_connect(connect_packet& packet, std:
     return bytes;
 }
 
-std::vector<uint8_t> packet_handler::handle_publish(publish_packet& packet)
+std::vector<uint8_t> packet_handler::handle_publish(publish_packet& packet, std::shared_ptr<socket_broker> socket)
 {
     // Debug packet
-    packet.debug();
+    // packet.debug();
 
     // Get manager instances.
     subscription_manager& sub_mgr = subscription_manager::get_instance();
     session_manager& ses_mgr = session_manager::get_instance();
+    packet_identifier_manager& pid_mgr = packet_identifier_manager::get_instance();
     
+    // Puback
+    if(packet.qos > 0)
+    {
+        auto puback = puback_packet::create(packet.v_header.packet_identifier);
+        socket->send_packet(*puback);
+    }
+
     // Get subscriptions related to the topic.
     std::vector<subscription> subs = sub_mgr.get_subscription(packet.v_header.topic_name);
 
@@ -109,6 +120,19 @@ std::vector<uint8_t> packet_handler::handle_publish(publish_packet& packet)
         // Decide QoS
         uint8_t qos = std::min(message.qos, sub.qos);
         message.qos = qos;
+        
+        // Set packet id
+        uint16_t pid;
+        if(qos > 0)
+        {
+            pid = pid_mgr.issue_packet_identifier(qos);
+            // pid_mgr.debug();
+        }
+        else
+        {
+            pid = 0;
+        }
+        message.v_header.packet_identifier = pid;
 
         // Set retain.
         message.retain = 0;
@@ -121,7 +145,6 @@ std::vector<uint8_t> packet_handler::handle_publish(publish_packet& packet)
         else
         {
             // Client offline.
-            // Do retain things.
             session.retain_message(message);
         }
     }
@@ -133,10 +156,36 @@ std::vector<uint8_t> packet_handler::handle_publish(publish_packet& packet)
     return std::vector<uint8_t>();
 }
 
+std::vector<uint8_t> packet_handler::handle_puback(puback_packet& packet, std::shared_ptr<socket_broker> socket)
+{
+    // Get manager instance.
+    packet_identifier_manager& pid_mgr = packet_identifier_manager::get_instance();
+
+    // Check QoS.
+    uint16_t pid = packet.v_header.packet_identifier;
+    uint8_t qos = pid_mgr.get_packet_qos(pid);
+    if(qos == 1)
+    {
+        // Acknowledge.
+        pid_mgr.acknowledge_packet_identifier(pid);
+    }
+    else if(qos == 2)
+    {
+        // Do further QoS things.
+    }
+    else
+    {
+        // Exception
+    }
+
+    // pid_mgr.debug();
+
+    return std::vector<uint8_t>();
+}
+
 std::vector<uint8_t> packet_handler::handle_subscribe(subscribe_packet& packet, std::shared_ptr<socket_broker> socket)
 {
-    // Debug subscribe packet.
-    packet.debug();
+    // packet.debug();
 
     // Get manager instances.
     subscription_manager& sub_mgr = subscription_manager::get_instance();
@@ -155,8 +204,7 @@ std::vector<uint8_t> packet_handler::handle_subscribe(subscribe_packet& packet, 
         return_code.push_back(packet.qos_request[i]);
 
     }
-    // Debug subscription insertion.
-    sub_mgr.debug(socket->get_client_id(), 1);
+    // sub_mgr.debug(socket->get_client_id(), 1);
     
     // 2. Transmit retained messages
     for(size_t i = 0; i < packet.topic_filter.size(); i++)
@@ -179,16 +227,15 @@ std::vector<uint8_t> packet_handler::handle_subscribe(subscribe_packet& packet, 
     std::unique_ptr<suback_packet> suback = suback_packet::create(packet.v_header.packet_identifier, return_code);
     auto bytes = suback->serialize();
 
-    // Debug suback packet
-    fixed_header::parse(bytes.data(), bytes.size()).debug();
-    suback->debug();
+    // fixed_header::parse(bytes.data(), bytes.size()).debug();
+    // suback->debug();
 
     return bytes;
 }
 
 std::vector<uint8_t> packet_handler::handle_unsubscribe(unsubscribe_packet& packet, std::shared_ptr<socket_broker> socket)
 {
-    packet.debug();
+    // packet.debug();
 
     // 1. Get manager instance.
     subscription_manager& sub_mgr = subscription_manager::get_instance();
@@ -199,8 +246,7 @@ std::vector<uint8_t> packet_handler::handle_unsubscribe(unsubscribe_packet& pack
         sub_mgr.remove_subscription(tf, socket->get_client_id());
     }
 
-    // Debug subscription elimination.
-    sub_mgr.debug(socket->get_client_id(), 1);
+    // sub_mgr.debug(socket->get_client_id(), 1);
 
     // 3. Transmit suback.
     auto suback = unsuback_packet::create(packet.v_header.packet_identifier);
@@ -225,7 +271,7 @@ std::vector<uint8_t> packet_handler::handle_disconnect(std::shared_ptr<socket_br
         // Later...
     }
 
-    ses_mgr.debug();
+    // ses_mgr.debug();
 
     return std::vector<uint8_t>();
 }
