@@ -1,3 +1,5 @@
+#pragma once
+
 #include <vector>
 #include "mqtt_control_packet.h"
 #include "fixed_header.h"
