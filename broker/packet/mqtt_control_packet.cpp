@@ -16,7 +16,7 @@ std::unique_ptr<mqtt_control_packet> mqtt_control_packet::mqtt_control_packet::p
     fixed_header header = fixed_header::parse(data, size);
     
     // Debug fixed hedaer.
-    header.debug();
+    // header.debug();
 
     // Payload pointer. (or variable header pointer to some packet types.)
     const uint8_t* payload = data + header.header_length;
