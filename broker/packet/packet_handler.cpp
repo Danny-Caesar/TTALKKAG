@@ -22,6 +22,8 @@ std::vector<uint8_t> packet_handler::handle(const uint8_t* data, size_t size, st
             return handle_subscribe(static_cast<subscribe_packet&>(*packet), socket);
         case mqtt_packet_type::UNSUBSCRIBE:
             return handle_unsubscribe(static_cast<unsubscribe_packet&>(*packet), socket);
+        case mqtt_packet_type::PINGREQ:
+            return handle_pingreq();
         case mqtt_packet_type::DISCONNECT:
             return handle_disconnect(socket);
         default:
@@ -251,6 +253,11 @@ std::vector<uint8_t> packet_handler::handle_unsubscribe(unsubscribe_packet& pack
     // 3. Transmit suback.
     auto suback = unsuback_packet::create(packet.v_header.packet_identifier);
     return suback->serialize();
+}
+
+std::vector<uint8_t> packet_handler::handle_pingreq()
+{
+    return pingresp_packet::create()->serialize();
 }
 
 std::vector<uint8_t> packet_handler::handle_disconnect(std::shared_ptr<socket_broker> socket)
