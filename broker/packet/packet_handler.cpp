@@ -1,6 +1,7 @@
 #include <stdexcept>
 #include <iostream>
 #include "packet_handler.h"
+#include "packet_identifier_manager.h"
 #include "../session/session_manager.h"
 #include "../subscription/subscription_manager.h"
 
@@ -14,7 +15,9 @@ std::vector<uint8_t> packet_handler::handle(const uint8_t* data, size_t size, st
         case mqtt_packet_type::CONNECT:
             return handle_connect(static_cast<connect_packet&>(*packet), socket);
         case mqtt_packet_type::PUBLISH:
-            return handle_publish(static_cast<publish_packet&>(*packet));
+            return handle_publish(static_cast<publish_packet&>(*packet), socket);
+        case mqtt_packet_type::PUBACK:
+            return handle_puback(static_cast<puback_packet&>(*packet), socket);
         case mqtt_packet_type::SUBSCRIBE:
             return handle_subscribe(static_cast<subscribe_packet&>(*packet), socket);
         case mqtt_packet_type::UNSUBSCRIBE:
@@ -86,7 +89,7 @@ std::vector<uint8_t> packet_handler::handle_connect(connect_packet& packet, std:
     return bytes;
 }
 
-std::vector<uint8_t> packet_handler::handle_publish(publish_packet& packet)
+std::vector<uint8_t> packet_handler::handle_publish(publish_packet& packet, std::shared_ptr<socket_broker> socket)
 {
     // Debug packet
     packet.debug();
@@ -131,6 +134,29 @@ std::vector<uint8_t> packet_handler::handle_publish(publish_packet& packet)
 
     // Do QoS ack things.
     return std::vector<uint8_t>();
+}
+
+std::vector<uint8_t> packet_handler::handle_puback(puback_packet& packet, std::shared_ptr<socket_broker> socket)
+{
+    // Get manager instance.
+    packet_identifier_manager& pid_mgr = packet_identifier_manager::get_instance();
+
+    // Check QoS.
+    uint16_t pid = packet.v_header.packet_identifier;
+    uint8_t qos = pid_mgr.get_packet_qos(pid);
+    if(qos == 1)
+    {
+        // Acknowledge.
+        pid_mgr.acknowledge_packet_identifier(pid);
+    }
+    else if(qos == 2)
+    {
+        // Do further QoS things.
+    }
+    else
+    {
+        // Exception
+    }
 }
 
 std::vector<uint8_t> packet_handler::handle_subscribe(subscribe_packet& packet, std::shared_ptr<socket_broker> socket)
