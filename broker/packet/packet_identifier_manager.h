@@ -6,9 +6,12 @@ class packet_identifier_manager
 {
 public:
     static packet_identifier_manager& get_instance();
-    const uint16_t issue_packet_identifier(const uint8_t qos);
-    const uint8_t get_packet_qos(const uint16_t packet_identifier);
+
+    uint16_t issue_packet_identifier(const uint8_t qos);
+    uint8_t get_packet_qos(const uint16_t packet_identifier);
     void acknowledge_packet_identifier(const uint16_t packet_identifier);
+
+    void debug();
     
 private:
     // Singleton patern
