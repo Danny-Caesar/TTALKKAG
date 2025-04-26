@@ -1,13 +1,14 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
-#include "ESP32Servo.h"
 #include <ArduinoJson.h>
+#include <esp_sleep.h>
+#include "ESP32Servo.h"
 
 #define SERVO_PIN 5
 
 // 디바이스 정보
 const char* client_id = "bc0x00";
-const char* device_type = "button";
+const char* device_type = "button_clicker";
 char* device_name = "button_clicker";
 char json_payload_connect[256];
 
@@ -60,13 +61,9 @@ void setup_wifi() {
 void reconnect() {
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
-    
-    // Client id 할당
-    String clientId = "button_clicker_";
-    clientId += String(random(0xffff), HEX);
 
     // 서버에 MQTT 연결
-    if (client.connect(clientId.c_str(), mqtt_user, mqtt_password)) {
+    if (client.connect(client_id, mqtt_user, mqtt_password)) {
       // 성공
       Serial.println("connected");
       
@@ -75,12 +72,14 @@ void reconnect() {
 
       // 필요한 토픽 구독
       client.subscribe(topic_click.c_str(), 1);
+      delay(500);
+      client.subscribe(topic_disconnect.c_str(), 1);
     } else {
       // 실패
       Serial.print("failed, rc=");
       Serial.print(client.state());
-      Serial.println(" retrying in a second...");
-      delay(1000);
+      Serial.println(" retrying in seconds...");
+      delay(5000);
     }
   }
 }
@@ -99,9 +98,14 @@ void callback(char* topic, byte* message, unsigned int length) {
   }
   Serial.println(payload);
 
-  // Click 토픽 처리
-  if (strcmp(topic, topic_click.c_str()) == 0) {
+  if(strcmp(topic, topic_click.c_str()) == 0) {
+    // click 토픽 처리
     click();
+  }
+  else if(strcmp(topic, topic_disconnect.c_str()) == 0) {
+    // disconnect 토픽 처리
+    // sleep 상태에 돌입
+    esp_deep_sleep_start();
   }
 }
 
