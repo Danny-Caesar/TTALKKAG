@@ -4,7 +4,7 @@
 #include <esp_sleep.h>
 #include "ESP32Servo.h"
 
-#define SERVO_PIN 5
+#define SERVO_PIN 2
 
 // 디바이스 정보
 const char* client_id = "bc0x00";
