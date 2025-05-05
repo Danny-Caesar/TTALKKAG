@@ -10,8 +10,8 @@
 #include <Servo.h>
 
 Servo myservo;  
-int initialAngle = 0;  // 서보모터의 초기 각도
-int returnAngle = 45;  // 서보모터가 돌아올 각도 (목표 각도)
+int initialAngle = 70;  // 서보모터의 초기 각도
+int returnAngle = 100;  // 서보모터가 돌아올 각도 (목표 각도)
 
 void setup() {
   // 서보모터를 3번 핀에 연결
