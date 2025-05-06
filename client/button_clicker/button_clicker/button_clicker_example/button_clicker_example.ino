@@ -7,7 +7,7 @@
 #define SERVO_PIN 2
 
 // 디바이스 정보
-const char* client_id = "bc0x00";
+const char* client_id = "bc0X00";
 const char* device_type = "button_clicker";
 char* device_name = "button_clicker";
 char json_payload_connect[256];
