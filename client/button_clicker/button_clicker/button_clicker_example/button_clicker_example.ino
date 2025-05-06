@@ -127,7 +127,7 @@ void setup_topic() {
   topic_disconnect = String("server/disconnect/") + device_type + "/" + client_id;
 
   // click 토픽 설정
-  topic_click = String("server/") + device_type + "/" + client_id + "/" + "action";
+  topic_click = String("server/action/") + device_type + "/" + client_id;
 }
 
 // 서보 모터 초기화
