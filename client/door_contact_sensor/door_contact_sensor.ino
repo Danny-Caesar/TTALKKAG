@@ -7,7 +7,7 @@
 #define DELAY 500
 
 // 디바이스 정보
-const char* client_id = "dcs0x00";
+const char* client_id = "dcs0X00";
 const char* device_type = "door_contact_sensor";
 char* device_name = "door_contact_sensor";
 char json_payload_connect[256];
@@ -130,7 +130,7 @@ void setup() {
   client.setServer(mqtt_server, mqtt_port);
   client.setCallback(callback);
 
-  pinMode(REED_PIN, INPUT_PULLUP);
+  pinMode(REED_PIN, INPUT);
 }
 
 void loop() {
@@ -143,10 +143,11 @@ void loop() {
 
   if(millis_current - millis_last >= DELAY){
     reed_current = debounce(REED_PIN, reed_last);
-    if(reed_last == HIGH && reed_current == LOW){
-      client.publish(topic_open, (const uint8_t*)"", 0, false);
+    if(reed_last == LOW && reed_current == HIGH){
+      client.publish(topic_open.c_str(), (const uint8_t*)"", 0, false);
     }
 
+    reed_last = reed_current;
     millis_last = millis_current;
   }
 }
