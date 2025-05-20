@@ -4,7 +4,7 @@
 #include <esp_sleep.h>
 #include "ESP32Servo.h"
 
-#define SERVO_PIN 2
+#define SERVO_PIN 4
 
 // 디바이스 정보
 const char* client_id = "bc0X00";
@@ -28,8 +28,8 @@ String topic_disconnect;
 String topic_click;
 
 // Servo 정보
-const int angle_initial = 0;
-const int angle_target = 45;
+const int angle_initial = 100;
+const int angle_target = 75;
 const int delay_click = 1000;
 
 // MQTT 객체
