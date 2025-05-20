@@ -22,6 +22,8 @@ const char* mqtt_user = NULL;
 const char* mqtt_password = NULL;
 const char* topic_connect = "hub/connect";
 String topic_triggers;
+String topic_subscribe;
+String topic_unsubscribe;
 String topic_disconnect;
 String topic_click;
 
@@ -72,6 +74,10 @@ void reconnect() {
 
       // 필요한 토픽 구독
       client.subscribe(topic_triggers.c_str());
+      delay(500);
+      client.subscribe(topic_subscribe.c_str());
+      delay(500);
+      client.subscribe(topic_unsubscribe.c_str());
       delay(500);
       client.subscribe(topic_click.c_str());
       delay(500);
@@ -136,6 +142,9 @@ void setup_payload_connect() {
 void setup_topic() {
   topic_triggers = String("server/triggers/") + client_type  + "/" + client_id;
 
+  topic_subscribe = String("server/subscribe/") + client_type  + "/" + client_id;
+  topic_subscribe = String("server/unsubscribe/") + client_type  + "/" + client_id;
+
   // disconnect 토픽 설정
   topic_disconnect = String("server/disconnect/") + client_type + "/" + client_id;
 
@@ -157,6 +166,31 @@ void subscribe_trigger_list(String triggers){
     Serial.println("subscribed: " + trigger);
     client.subscribe(trigger.c_str());
   }
+}
+
+void subscribe_trigger(String trigger){
+  StaticJsonDocument<200> doc;
+  deserializeJson(doc, trigger);
+
+  const char* ctype = doc["type"];
+  const char* cid = doc["client_id"];
+
+  String topic = String("server/subscribe/") + ctype + "/" + cid;
+
+  Serial.println("subscribed: " + topic);
+  client.subscribe(topic.c_str());
+}
+
+void unsubscribe_trigger(String trigger){
+  StaticJsonDocument<200> doc;
+  deserializeJson(doc, trigger);
+
+  const char* ctype = doc["type"];
+  const char* cid = doc["client_id"];
+
+  String topic = String("server/unsubscribe/") + ctype + "/" + cid;
+
+  client.unsubscribe(topic.c_str());
 }
 
 // 서보 모터 초기화
