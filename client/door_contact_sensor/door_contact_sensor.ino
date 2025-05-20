@@ -8,8 +8,7 @@
 
 // 디바이스 정보
 const char* client_id = "dcs0X00";
-const char* device_type = "door_contact_sensor";
-char* device_name = "door_contact_sensor";
+const char* client_type = "door_contact_sensor";
 char json_payload_connect[256];
 
 // WiFi 정보
@@ -102,13 +101,24 @@ void callback(char* topic, byte* message, unsigned int length) {
   }
 }
 
+// 연결 메시지 초기화
+void setup_payload_connect() {
+  // 연결 메시지 생성
+  StaticJsonDocument<200> doc;
+  doc["clientId"] = client_id;
+  doc["type"] = client_type;
+  
+  // Json 컨테이너를 문자열로 변환
+  serializeJson(doc, json_payload_connect);
+}
+
 // 토픽 초기화
 void setup_topic() {
   // disconnect 토픽 설정
-  topic_disconnect = String("server/disconnect/") + device_type + "/" + client_id;
+  topic_disconnect = String("server/disconnect/") + client_type + "/" + client_id;
 
   // open 토픽 설정
-  topic_open = String("client/action/") + device_type + "/" + client_id;
+  topic_open = String("client/action/") + client_type + "/" + client_id;
 }
 
 bool debounce(int pin, bool state_last){
@@ -123,6 +133,7 @@ bool debounce(int pin, bool state_last){
 void setup() {
   Serial.begin(115200);
 
+  setup_payload_connect();
   setup_topic();
 
   setup_wifi();
