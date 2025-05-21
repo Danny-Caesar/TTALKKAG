@@ -27,8 +27,8 @@ int main()
                 // tcp connection log
                 boost::asio::ip::tcp::endpoint remote_ep = socket->remote_endpoint();
                 std::string client_ip = remote_ep.address().to_string();
-                unsigned short client_port = remote_ep.port();
-                std::cout << "New connection from " << client_ip << " on port " << std::getenv("MQTT_PORT") << ".\n";
+                // unsigned short client_port = remote_ep.port();
+                std::cout << "소켓에 " << client_ip << "::" << std::getenv("MQTT_PORT") << " 접속.\n";
 
                 std::shared_ptr<socket_broker> broker = std::make_shared<socket_broker>(std::move(*socket));
                 broker->start();  // Start read loop
