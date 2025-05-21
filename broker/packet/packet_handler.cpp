@@ -278,6 +278,9 @@ std::vector<uint8_t> packet_handler::handle_unsubscribe(unsubscribe_packet& pack
 
     // sub_mgr.debug(socket->get_client_id(), 1);
 
+    // UNSUBACK log
+    std::cout << socket->get_client_id() << "에게 UNSUBACK 송신\n";
+
     // 3. Transmit suback.
     auto suback = unsuback_packet::create(packet.v_header.packet_identifier);
     return suback->serialize();
