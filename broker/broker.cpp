@@ -2,9 +2,11 @@
 #include <boost/asio.hpp>
 #include "socket_broker.h"
 #include "subscription/subscription_manager.h"
+#include "logo_display.h"
 
 int main()
 {
+    print_logo();
     boost::asio::io_context io_context;
 
     boost::asio::ip::tcp::acceptor acceptor(
