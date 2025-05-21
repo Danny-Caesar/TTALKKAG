@@ -198,6 +198,8 @@ std::vector<uint8_t> packet_handler::handle_puback(puback_packet& packet, std::s
 
     // pid_mgr.debug();
 
+    std::cout << "Received PUBACK from " << socket->get_client_id() << " (pid" << pid << ").\n";
+
     return std::vector<uint8_t>();
 }
 
