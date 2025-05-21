@@ -105,6 +105,11 @@ std::vector<uint8_t> packet_handler::handle_publish(publish_packet& packet, std:
     // Debug packet
     // packet.debug();
 
+    // Packet log
+    std::cout << "Received PUBLISH from " << socket->get_client_id();
+    std::cout << "(d" << packet.dup << ", q" << packet.qos << ", r" << packet.retain << ").\n";
+    std::cout << "payload: " << packet.message << " (" << packet.message.length() << " bytes)\n";
+
     // Get manager instances.
     subscription_manager& sub_mgr = subscription_manager::get_instance();
     session_manager& ses_mgr = session_manager::get_instance();
@@ -113,6 +118,8 @@ std::vector<uint8_t> packet_handler::handle_publish(publish_packet& packet, std:
     // Puback
     if(packet.qos > 0)
     {
+        std::cout << "Sending PUBACK to " << socket->get_client_id() << ".\n";
+
         auto puback = puback_packet::create(packet.v_header.packet_identifier);
         socket->send_packet(*puback);
     }
