@@ -36,6 +36,12 @@ std::vector<uint8_t> packet_handler::handle_connect(connect_packet& packet, std:
 {
     // packet.debug();
 
+    // Packet log.
+    std::cout << "New client connected as " << socket->get_client_id();
+    std::cout << "(p" << packet.v_header.protocol_level << ", ";
+    std::cout << 'k' << packet.v_header.keep_alive << ", ";
+    std::cout << 'c' << packet.v_header.connect_flags.clean_session << ").\n";
+
     // Get manager instnaces
     session_manager& ses_mgr = session_manager::get_instance();
 
@@ -83,6 +89,9 @@ std::vector<uint8_t> packet_handler::handle_connect(connect_packet& packet, std:
 
     // Debug session
     // ses_mgr.debug();
+
+    // Connack log
+    std::cout << "Sending CONNACK to " << packet.client_id << '(' << session_present << ", " << (int)return_code << ").\n";
 
     // Create reply packet.
     auto connack = connack_packet::create(session_present, return_code);
