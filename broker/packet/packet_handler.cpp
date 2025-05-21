@@ -107,7 +107,8 @@ std::vector<uint8_t> packet_handler::handle_publish(publish_packet& packet, std:
 
     // Packet log
     std::cout << socket->get_client_id() << "의 PUBLISH 수신";
-    std::cout << "(d" << packet.dup << ", q" << packet.qos << ", r" << packet.retain << ").\n";
+    std::cout << "(d" << packet.dup << ", q" << packet.qos << ", r" << packet.retain << ", '";
+    std::cout << packet.v_header.topic_name << "')\n";
     std::cout << "\tpayload: " << packet.message << " (" << packet.message.length() << " bytes)\n";
 
     // Get manager instances.
