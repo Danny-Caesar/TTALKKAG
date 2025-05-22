@@ -220,6 +220,7 @@ void setup() {
 
   client.setServer(mqtt_server, mqtt_port);
   client.setCallback(callback);
+  client.setKeepAlive(60);
 }
 
 void loop() {

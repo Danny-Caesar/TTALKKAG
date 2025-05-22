@@ -3,7 +3,7 @@
 #include <ArduinoJson.h>
 #include <esp_sleep.h>
 
-#define REED_PIN 2
+#define REED_PIN 21
 #define DELAY 500
 
 // 디바이스 정보
@@ -124,7 +124,7 @@ void setup_topic() {
 bool debounce(int pin, bool state_last){
   bool state_current = digitalRead(pin);
   if(state_last != state_current){
-    delay(5);
+    delay(50);
     state_current = digitalRead(pin);
   }
   return state_current;
@@ -140,21 +140,27 @@ void setup() {
 
   client.setServer(mqtt_server, mqtt_port);
   client.setCallback(callback);
+  client.setKeepAlive(60);
 
   pinMode(REED_PIN, INPUT);
 }
 
 void loop() {
-  if (!client.connected()) {
-    reconnect();
-  }
-  client.loop();
+  // if (!client.connected()) {
+  //   reconnect();
+  // }
+  // client.loop();
 
   unsigned long millis_current = millis();
 
   if(millis_current - millis_last >= DELAY){
-    reed_current = debounce(REED_PIN, reed_last);
+    // reed_current = debounce(REED_PIN, reed_last);
+    reed_current = digitalRead(REED_PIN);
+    Serial.print(millis_current);
+    Serial.print(": ");
+    Serial.println(reed_current);
     if(reed_last == LOW && reed_current == HIGH){
+      Serial.println("Contact detacted.");
       client.publish(topic_open.c_str(), (const uint8_t*)"", 0, false);
     }
 
