@@ -4,12 +4,11 @@
 #include <esp_sleep.h>
 #include "ESP32Servo.h"
 
-#define SERVO_PIN 2
+#define SERVO_PIN 4
 
 // 디바이스 정보
 const char* client_id = "bc0X00";
-const char* device_type = "button_clicker";
-char* device_name = "button_clicker";
+const char* client_type = "button_clicker";
 char json_payload_connect[256];
 
 // WiFi 정보
@@ -22,12 +21,15 @@ const int mqtt_port = 1883;
 const char* mqtt_user = NULL;
 const char* mqtt_password = NULL;
 const char* topic_connect = "hub/connect";
+String topic_triggers;
+String topic_subscribe;
+String topic_unsubscribe;
 String topic_disconnect;
 String topic_click;
 
 // Servo 정보
-const int angle_initial = 0;
-const int angle_target = 45;
+const int angle_initial = 100;
+const int angle_target = 75;
 const int delay_click = 1000;
 
 // MQTT 객체
@@ -71,9 +73,15 @@ void reconnect() {
       client.publish(topic_connect, (const uint8_t*)json_payload_connect, strlen(json_payload_connect), false);
 
       // 필요한 토픽 구독
-      client.subscribe(topic_click.c_str(), 1);
+      client.subscribe(topic_triggers.c_str());
       delay(500);
-      client.subscribe(topic_disconnect.c_str(), 1);
+      client.subscribe(topic_subscribe.c_str());
+      delay(500);
+      client.subscribe(topic_unsubscribe.c_str());
+      delay(500);
+      client.subscribe(topic_click.c_str());
+      delay(500);
+      client.subscribe(topic_disconnect.c_str());
     } else {
       // 실패
       Serial.print("failed, rc=");
@@ -98,12 +106,22 @@ void callback(char* topic, byte* message, unsigned int length) {
   }
   Serial.println(payload);
 
-  if(strcmp(topic, topic_click.c_str()) == 0) {
+  if(strcmp(topic, topic_triggers.c_str()) == 0){
+    subscribe_trigger_list(payload);
+  }
+  else if(strcmp(topic, topic_subscribe.c_str()) == 0){
+    subscribe_trigger(payload);
+  }
+  else if(strcmp(topic, topic_unsubscribe.c_str()) == 0){
+    unsubscribe_trigger(payload);
+  }
+  else if(strcmp(topic, topic_click.c_str()) == 0) {
     // click 토픽 처리
     click();
   }
   else if(strcmp(topic, topic_disconnect.c_str()) == 0) {
     // disconnect 토픽 처리
+    client.disconnect();
     // sleep 상태에 돌입
     esp_deep_sleep_start();
   }
@@ -114,8 +132,7 @@ void setup_payload_connect() {
   // 연결 메시지 생성
   StaticJsonDocument<200> doc;
   doc["clientId"] = client_id;
-  doc["type"] = device_type;
-  doc["name"] = device_name;
+  doc["type"] = client_type;
   
   // Json 컨테이너를 문자열로 변환
   serializeJson(doc, json_payload_connect);
@@ -123,11 +140,57 @@ void setup_payload_connect() {
 
 // 토픽 초기화
 void setup_topic() {
+  topic_triggers = String("server/triggers/") + client_type  + "/" + client_id;
+
+  topic_subscribe = String("server/subscribe/") + client_type  + "/" + client_id;
+  topic_subscribe = String("server/unsubscribe/") + client_type  + "/" + client_id;
+
   // disconnect 토픽 설정
-  topic_disconnect = String("server/disconnect/") + device_type + "/" + client_id;
+  topic_disconnect = String("server/disconnect/") + client_type + "/" + client_id;
 
   // click 토픽 설정
-  topic_click = String("server/action/") + device_type + "/" + client_id;
+  topic_click = String("server/action/") + client_type + "/" + client_id;
+}
+
+void subscribe_trigger_list(String triggers){
+  StaticJsonDocument<200> doc;
+  deserializeJson(doc, triggers);
+  JsonArray client_type = doc["clientType"].as<JsonArray>();
+  JsonArray client_id = doc["clientId"].as<JsonArray>();
+
+  for(int i=0;i<client_type.size();i++){
+    const char* ctype = client_type[i];
+    const char* cid = client_id[i];
+    String trigger = String("client/action/") + ctype + "/" + cid;
+
+    Serial.println("subscribed: " + trigger);
+    client.subscribe(trigger.c_str());
+  }
+}
+
+void subscribe_trigger(String trigger){
+  StaticJsonDocument<200> doc;
+  deserializeJson(doc, trigger);
+
+  const char* ctype = doc["type"];
+  const char* cid = doc["client_id"];
+
+  String topic = String("server/subscribe/") + ctype + "/" + cid;
+
+  Serial.println("subscribed: " + topic);
+  client.subscribe(topic.c_str());
+}
+
+void unsubscribe_trigger(String trigger){
+  StaticJsonDocument<200> doc;
+  deserializeJson(doc, trigger);
+
+  const char* ctype = doc["type"];
+  const char* cid = doc["client_id"];
+
+  String topic = String("server/unsubscribe/") + ctype + "/" + cid;
+
+  client.unsubscribe(topic.c_str());
 }
 
 // 서보 모터 초기화
@@ -148,7 +211,6 @@ void click() {
 void setup() {
   Serial.begin(115200);
 
-
   setup_payload_connect();
   setup_topic();
 
@@ -158,6 +220,7 @@ void setup() {
 
   client.setServer(mqtt_server, mqtt_port);
   client.setCallback(callback);
+  client.setKeepAlive(60);
 }
 
 void loop() {

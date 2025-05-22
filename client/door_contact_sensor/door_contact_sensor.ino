@@ -3,13 +3,12 @@
 #include <ArduinoJson.h>
 #include <esp_sleep.h>
 
-#define REED_PIN 2
+#define REED_PIN 21
 #define DELAY 500
 
 // 디바이스 정보
 const char* client_id = "dcs0X00";
-const char* device_type = "door_contact_sensor";
-char* device_name = "door_contact_sensor";
+const char* client_type = "door_contact_sensor";
 char json_payload_connect[256];
 
 // WiFi 정보
@@ -102,19 +101,30 @@ void callback(char* topic, byte* message, unsigned int length) {
   }
 }
 
+// 연결 메시지 초기화
+void setup_payload_connect() {
+  // 연결 메시지 생성
+  StaticJsonDocument<200> doc;
+  doc["clientId"] = client_id;
+  doc["type"] = client_type;
+  
+  // Json 컨테이너를 문자열로 변환
+  serializeJson(doc, json_payload_connect);
+}
+
 // 토픽 초기화
 void setup_topic() {
   // disconnect 토픽 설정
-  topic_disconnect = String("server/disconnect/") + device_type + "/" + client_id;
+  topic_disconnect = String("server/disconnect/") + client_type + "/" + client_id;
 
   // open 토픽 설정
-  topic_open = String("client/action/") + device_type + "/" + client_id;
+  topic_open = String("client/action/") + client_type + "/" + client_id;
 }
 
 bool debounce(int pin, bool state_last){
   bool state_current = digitalRead(pin);
   if(state_last != state_current){
-    delay(5);
+    delay(50);
     state_current = digitalRead(pin);
   }
   return state_current;
@@ -123,27 +133,34 @@ bool debounce(int pin, bool state_last){
 void setup() {
   Serial.begin(115200);
 
+  setup_payload_connect();
   setup_topic();
 
   setup_wifi();
 
   client.setServer(mqtt_server, mqtt_port);
   client.setCallback(callback);
+  client.setKeepAlive(60);
 
   pinMode(REED_PIN, INPUT);
 }
 
 void loop() {
-  if (!client.connected()) {
-    reconnect();
-  }
-  client.loop();
+  // if (!client.connected()) {
+  //   reconnect();
+  // }
+  // client.loop();
 
   unsigned long millis_current = millis();
 
   if(millis_current - millis_last >= DELAY){
-    reed_current = debounce(REED_PIN, reed_last);
+    // reed_current = debounce(REED_PIN, reed_last);
+    reed_current = digitalRead(REED_PIN);
+    Serial.print(millis_current);
+    Serial.print(": ");
+    Serial.println(reed_current);
     if(reed_last == LOW && reed_current == HIGH){
+      Serial.println("Contact detacted.");
       client.publish(topic_open.c_str(), (const uint8_t*)"", 0, false);
     }
 
