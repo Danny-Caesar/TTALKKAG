@@ -3,12 +3,11 @@
 #include <ArduinoJson.h>
 #include <esp_sleep.h>
 
-#define REED_PIN 21
-#define INPUT_DELAY 500
+#define INPUT_DELAY 50
 
 // 디바이스 정보
-const char* client_id = "dcs0X00";
-const char* client_type = "door_contact_sensor";
+const char* client_id = "rc0X8F";
+const char* client_type = "remote_control";
 char json_payload_connect[256];
 
 // WiFi 정보
@@ -22,18 +21,21 @@ const char* mqtt_user = NULL;
 const char* mqtt_password = NULL;
 const char* topic_connect = "hub/connect";
 String topic_disconnect;
-String topic_open;
-
-// Reed 정보
-bool door_open = false;
-bool reed_current = LOW;
-bool reed_last = LOW;
+String topic_remote[3];
 
 // MQTT 객체
 WiFiClient espClient;
 PubSubClient client(espClient);
 
 unsigned long millis_last = 0;
+
+const int button_pin[3] = {10, 20, 21};
+const int power_pin= 0;
+const int down_pin = 1;
+const int up_pin = 2;
+
+int state[3] = {1, 1, 1};
+int last_state[3] = {1, 1, 1};
 
 // ssid와 password 정보로 WiFi 연결
 void setup_wifi() {
@@ -117,21 +119,29 @@ void setup_topic() {
   // disconnect 토픽 설정
   topic_disconnect = String("server/disconnect/") + client_type + "/" + client_id;
 
-  // open 토픽 설정
-  topic_open = String("client/action/") + client_type + "/" + client_id;
+  // remote 토픽 설정
+  String topic_power = String("client/action/") + client_type + "/" + client_id;
+  String topic_down = String("client/down/") + client_type + "/" + client_id;
+  String topic_up = String("client/up/") + client_type + "/" + client_id;
+
+  topic_remote[0] = topic_power;
+  topic_remote[1] = topic_down;
+  topic_remote[2] = topic_up;
 }
 
 bool debounce(int pin, bool state_last){
   bool state_current = digitalRead(pin);
   if(state_last != state_current){
-    delay(50);
+    delay(5);
     state_current = digitalRead(pin);
   }
   return state_current;
 }
 
 void setup() {
-  Serial.begin(115200);
+  for(int i=0;i<3;i++){
+    pinMode(button_pin[i], INPUT_PULLUP);
+  }
 
   setup_payload_connect();
   setup_topic();
@@ -142,29 +152,38 @@ void setup() {
   client.setCallback(callback);
   client.setKeepAlive(60);
 
-  pinMode(REED_PIN, INPUT);
+  Serial.begin(115200);
 }
 
 void loop() {
-  // if (!client.connected()) {
-  //   reconnect();
-  // }
-  // client.loop();
+  if (!client.connected()) {
+    reconnect();
+  }
+  client.loop();
 
   unsigned long millis_current = millis();
 
   if(millis_current - millis_last >= INPUT_DELAY){
-    // reed_current = debounce(REED_PIN, reed_last);
-    reed_current = digitalRead(REED_PIN);
-    Serial.print(millis_current);
-    Serial.print(": ");
-    Serial.println(reed_current);
-    if(reed_last == LOW && reed_current == HIGH){
-      Serial.println("Contact detacted.");
-      client.publish(topic_open.c_str(), (const uint8_t*)"", 0, false);
+    for(int i=0;i<3;i++){
+      state[i] = debounce(button_pin[i], last_state[i]);
+
+      if(last_state[i] == HIGH && state[i] == LOW){
+        Serial.print("button");
+        Serial.print(i);
+        Serial.println(" clicked.");
+        client.publish(topic_remote[i].c_str(), (const uint8_t*)"", 0, false);
+        last_state[i] = state[i];
+        break;
+      }
+      last_state[i] = state[i];
     }
 
-    reed_last = reed_current;
+    // for(int i=0;i<3;i++){
+    //   Serial.print(state[i]);
+    //   Serial.print(" ");
+    // }
+    // Serial.println();
+
     millis_last = millis_current;
   }
 }
