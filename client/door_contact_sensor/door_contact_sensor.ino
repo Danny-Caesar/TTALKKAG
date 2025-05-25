@@ -4,7 +4,7 @@
 #include <esp_sleep.h>
 
 #define REED_PIN 21
-#define DELAY 500
+#define INPUT_DELAY 500
 
 // 디바이스 정보
 const char* client_id = "dcs0X00";
@@ -153,7 +153,7 @@ void loop() {
 
   unsigned long millis_current = millis();
 
-  if(millis_current - millis_last >= DELAY){
+  if(millis_current - millis_last >= INPUT_DELAY){
     // reed_current = debounce(REED_PIN, reed_last);
     reed_current = digitalRead(REED_PIN);
     Serial.print(millis_current);
