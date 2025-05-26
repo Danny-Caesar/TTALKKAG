@@ -23,7 +23,7 @@ std::vector<uint8_t> packet_handler::handle(const uint8_t* data, size_t size, st
         case mqtt_packet_type::UNSUBSCRIBE:
             return handle_unsubscribe(static_cast<unsubscribe_packet&>(*packet), socket);
         case mqtt_packet_type::PINGREQ:
-            return handle_pingreq();
+            return handle_pingreq(socket);
         case mqtt_packet_type::DISCONNECT:
             return handle_disconnect(socket);
         default:
@@ -35,6 +35,12 @@ std::vector<uint8_t> packet_handler::handle(const uint8_t* data, size_t size, st
 std::vector<uint8_t> packet_handler::handle_connect(connect_packet& packet, std::shared_ptr<socket_broker> socket)
 {
     // packet.debug();
+
+    // Connect log.
+    std::cout << "새 클라이언트 " << packet.client_id << "가 연결 되었습니다";
+    std::cout << "(p" << (int)packet.v_header.protocol_level << ", ";
+    std::cout << 'k' << (int)packet.v_header.keep_alive << ", ";
+    std::cout << 'c' << (int)packet.v_header.connect_flags.clean_session << ").\n";
 
     // Get manager instnaces
     session_manager& ses_mgr = session_manager::get_instance();
@@ -84,6 +90,9 @@ std::vector<uint8_t> packet_handler::handle_connect(connect_packet& packet, std:
     // Debug session
     // ses_mgr.debug();
 
+    // Connack log
+    std::cout << packet.client_id << "에게 CONNACK 송신(" << session_present << ", " << (int)return_code << ").\n";
+
     // Create reply packet.
     auto connack = connack_packet::create(session_present, return_code);
     auto bytes = connack->serialize();
@@ -96,6 +105,11 @@ std::vector<uint8_t> packet_handler::handle_publish(publish_packet& packet, std:
     // Debug packet
     // packet.debug();
 
+    // Packet log
+    std::cout << socket->get_client_id() << "의 PUBLISH 수신";
+    std::cout << "(d" << packet.dup << ", q" << packet.qos << ", r" << packet.retain << ").\n";
+    std::cout << "\tpayload: " << packet.message << " (" << packet.message.length() << " bytes)\n";
+
     // Get manager instances.
     subscription_manager& sub_mgr = subscription_manager::get_instance();
     session_manager& ses_mgr = session_manager::get_instance();
@@ -104,6 +118,8 @@ std::vector<uint8_t> packet_handler::handle_publish(publish_packet& packet, std:
     // Puback
     if(packet.qos > 0)
     {
+        std::cout << socket->get_client_id() << "에게 PUBACK 송신.\n";
+
         auto puback = puback_packet::create(packet.v_header.packet_identifier);
         socket->send_packet(*puback);
     }
@@ -182,12 +198,16 @@ std::vector<uint8_t> packet_handler::handle_puback(puback_packet& packet, std::s
 
     // pid_mgr.debug();
 
+    std::cout << socket->get_client_id() << "에게 PUBACK 송신(pid" << pid << ").\n";
+
     return std::vector<uint8_t>();
 }
 
 std::vector<uint8_t> packet_handler::handle_subscribe(subscribe_packet& packet, std::shared_ptr<socket_broker> socket)
 {
     // packet.debug();
+    // Packet log
+    std::cout << socket->get_client_id() << "의 SUBSCRIBE 수신\n";
 
     // Get manager instances.
     subscription_manager& sub_mgr = subscription_manager::get_instance();
@@ -196,6 +216,8 @@ std::vector<uint8_t> packet_handler::handle_subscribe(subscribe_packet& packet, 
     std::vector<uint8_t> return_code;
     for(size_t i = 0; i < packet.topic_filter.size(); i++)
     {
+        std::cout << '\t' << packet.topic_filter[i] << " (QoS " << (int)packet.qos_request[i] << ")\n";
+
         // Validate topic filter.
         // Set return code 0x80 if topic filter not validate.
 
@@ -225,6 +247,9 @@ std::vector<uint8_t> packet_handler::handle_subscribe(subscribe_packet& packet, 
         socket->send_packet(message);
     }
 
+    // SUBACK log
+    std::cout << socket->get_client_id() << "에게 SUBACK 송신\n";
+
     // 3. Reply suback packet.
     std::unique_ptr<suback_packet> suback = suback_packet::create(packet.v_header.packet_identifier, return_code);
     auto bytes = suback->serialize();
@@ -238,6 +263,8 @@ std::vector<uint8_t> packet_handler::handle_subscribe(subscribe_packet& packet, 
 std::vector<uint8_t> packet_handler::handle_unsubscribe(unsubscribe_packet& packet, std::shared_ptr<socket_broker> socket)
 {
     // packet.debug();
+    // UNSUBSCRIBE log
+    std::cout << socket->get_client_id() << "의 UNSUBSCRIBE 수신\n";
 
     // 1. Get manager instance.
     subscription_manager& sub_mgr = subscription_manager::get_instance();
@@ -245,23 +272,31 @@ std::vector<uint8_t> packet_handler::handle_unsubscribe(unsubscribe_packet& pack
     // 2. Unsubscribe.
     for(auto tf : packet.topic_filter)
     {
+        std::cout << '\t' << tf << '\n';
         sub_mgr.remove_subscription(tf, socket->get_client_id());
     }
 
     // sub_mgr.debug(socket->get_client_id(), 1);
+
+    // UNSUBACK log
+    std::cout << socket->get_client_id() << "에게 UNSUBACK 송신\n";
 
     // 3. Transmit suback.
     auto suback = unsuback_packet::create(packet.v_header.packet_identifier);
     return suback->serialize();
 }
 
-std::vector<uint8_t> packet_handler::handle_pingreq()
+std::vector<uint8_t> packet_handler::handle_pingreq(std::shared_ptr<socket_broker> socket)
 {
+    std::cout << socket->get_client_id() << "의 PINGREQ 수신\n";
+    std::cout << socket->get_client_id() << "에게 PINGRESP 송신\n";
     return pingresp_packet::create()->serialize();
 }
 
 std::vector<uint8_t> packet_handler::handle_disconnect(std::shared_ptr<socket_broker> socket)
 {
+    std::cout << socket->get_client_id() << "의 DISCONNECT 수신\n";
+
     // Get manager instance.
     session_manager& ses_mgr = session_manager::get_instance();
 
