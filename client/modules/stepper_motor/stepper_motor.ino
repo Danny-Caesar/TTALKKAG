@@ -3,10 +3,10 @@
 // 스텝모터의 전체 스텝 수 (28BYJ-48: 2048 스텝 = 360도)
 const int stepsPerRevolution = 2048;
 
-Stepper myStepper(stepsPerRevolution, 8, 10, 9, 11);
+Stepper myStepper(stepsPerRevolution, 1, 0, 3, 2);
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
   Serial.println("원하는 각도를 입력하세요 (예: 90 또는 -180):");
   myStepper.setSpeed(10); // 속도 설정 (RPM)
 }
