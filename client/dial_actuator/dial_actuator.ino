@@ -6,7 +6,7 @@
 
 // 디바이스 정보
 const char* client_id = "da0X76";
-const char* client_type = "button_clicker";
+const char* client_type = "dial_actuator";
 char json_payload_connect[256];
 
 // WiFi 정보
@@ -26,14 +26,17 @@ String topic_disconnect;
 String topic_action;
 String topic_down;
 String topic_up;
+String topic_set_step;
 
 const int REVOLUTION = 2048;
-const int SM1 1
-const int SM2 0
-const int SM3 3
-const int SM4 2
-const int DOWN 0
-const int UP 1
+const int SM1 = 1;
+const int SM2 = 0;
+const int SM3 = 3;
+const int SM4 = 2;
+const int DOWN = 0;
+const int UP = 1;
+const int STEP_BASE = 3;
+static int step_unit = 1;
 Stepper myStepper(REVOLUTION, SM1, SM2, SM3, SM4);
 
 // MQTT 객체
@@ -86,6 +89,8 @@ void reconnect() {
       delay(100);
       client.subscribe(topic_up.c_str());
       delay(100);
+      client.subscribe(topic_set_step.c_str());
+      delay(100);
       client.subscribe(topic_disconnect.c_str());
     } else {
       // 실패
@@ -121,13 +126,16 @@ void callback(char* topic, byte* message, unsigned int length) {
     unsubscribe_trigger(payload);
   }
   else if(strcmp(topic, topic_action.c_str()) == 0) {
-    click();
+    // click();
+  }
+  else if(strcmp(topic, topic_set_step.c_str()) == 0) {
+    set_step_unit(payload);
   }
   else if(strcmp(topic, topic_down.c_str()) == 0) {
-    rotate(DOWN)
+    rotate(DOWN);
   }
   else if(strcmp(topic, topic_up.c_str()) == 0) {
-    click(UP);
+    rotate(UP);
   }
   else if(strcmp(topic, topic_disconnect.c_str()) == 0) {
     // disconnect 토픽 처리
@@ -160,6 +168,7 @@ void setup_topic() {
   topic_action = String("server/action/") + client_type + "/" + client_id;
   topic_down = String("server/down/") + client_type + "/" + client_id;
   topic_up = String("server/up/") + client_type + "/" + client_id;
+  topic_set_step = String("server/step/") + client_type + "/" + client_id;
 }
 
 void subscribe_trigger_list(String triggers){
@@ -171,12 +180,14 @@ void subscribe_trigger_list(String triggers){
   for(int i=0;i<client_type.size();i++){
     const char* ctype = client_type[i];
     const char* cid = client_id[i];
-    String trigger = String("server/action/") + ctype + "/" + cid;
-    String trigger = String("server/up/") + ctype + "/" + cid;
-    String trigger = String("server/down/") + ctype + "/" + cid;
+    String action = String("server/action/") + ctype + "/" + cid;
+    String down = String("server/down/") + ctype + "/" + cid;
+    String up = String("server/up/") + ctype + "/" + cid;
 
-    Serial.println("subscribed: " + trigger);
-    client.subscribe(trigger.c_str());
+    Serial.println("subscribed:\n" + action + '\n' + down + '\n' + up + '\n');
+    client.subscribe(action.c_str());
+    client.subscribe(down.c_str());
+    client.subscribe(up.c_str());
   }
 }
 
@@ -205,6 +216,32 @@ void unsubscribe_trigger(String trigger){
   client.unsubscribe(topic.c_str());
 }
 
+void set_step_unit(String payload){
+  StaticJsonDocument<200> doc;
+  deserializeJson(doc, payload);
+
+  const int unit = doc["step"];
+
+  if(unit > 100)return;
+  else if(unit < 1)return;
+  step_unit = unit;
+}
+
+void rotate(int direction){
+  int angle = STEP_BASE * step_unit;
+  if(direction == UP){
+    angle *= -1;
+  }
+
+  int steps = map(angle, -360, 360, -REVOLUTION, REVOLUTION);
+
+  myStepper.step(steps);
+
+  Serial.print(angle);
+  Serial.println(" degree rotated.");
+  delay(100);
+}
+
 void setup() {
   Serial.begin(115200);
 
@@ -216,6 +253,8 @@ void setup() {
   client.setServer(mqtt_server, mqtt_port);
   client.setCallback(callback);
   client.setKeepAlive(60);
+
+  myStepper.setSpeed(10);
 }
 
 void loop() {
