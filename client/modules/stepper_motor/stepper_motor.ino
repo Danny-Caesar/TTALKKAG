@@ -1,26 +1,48 @@
 #include <Stepper.h>
 
+#define DOWN 0
+#define UP 1
+
 // 스텝모터의 전체 스텝 수 (28BYJ-48: 2048 스텝 = 360도)
 const int stepsPerRevolution = 2048;
-
 Stepper myStepper(stepsPerRevolution, 1, 0, 3, 2);
+
+const int step_base = 3;
+static int step_unit = 1;
+
+void set_step_unit(int val){
+  if(val > 100)return;
+  else if(val < 1)return;
+  step_unit = val;
+}
+
+void rotate(int direction){
+  int angle = step_base * step_unit;
+  if(direction == UP){
+    angle *= -1;
+  }
+
+  int steps = map(angle, -360, 360, -stepsPerRevolution, stepsPerRevolution);
+
+  myStepper.step(steps);
+
+  Serial.print(angle);
+  Serial.println(" degree rotated.");
+  delay(500);
+}
 
 void setup() {
   Serial.begin(115200);
-  Serial.println("원하는 각도를 입력하세요 (예: 90 또는 -180):");
-  myStepper.setSpeed(10); // 속도 설정 (RPM)
+
+  myStepper.setSpeed(10); // RPM
+  Serial.println("step_unit: ");
 }
 
 void loop() {
   if (Serial.available() > 0) {
-    int angle = Serial.parseInt(); // 시리얼 입력된 각도 읽기
-    int steps = map(angle, -360, 360, -stepsPerRevolution, stepsPerRevolution); // 각도를 스텝 수로 변환
-
-    myStepper.step(steps);
-
-    Serial.print("모터가 ");
-    Serial.print(angle);
-    Serial.println("도 회전했습니다.");
-    delay(500); // 다음 입력을 위한 대기
+    int unit = Serial.parseInt();
+    set_step_unit(unit);
+    rotate(UP);
+    rotate(DOWN);
   }
 }
