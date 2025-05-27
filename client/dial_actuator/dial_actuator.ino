@@ -22,7 +22,6 @@ const char* mqtt_user = NULL;
 const char* mqtt_password = NULL;
 const char* topic_connect = "hub/connect";
 String topic_triggers;
-String topic_dial;
 String topic_subscribe;
 String topic_unsubscribe;
 String topic_disconnect;
@@ -147,7 +146,7 @@ void callback(char* topic, byte* message, unsigned int length) {
     unsubscribe_trigger(payload);
   }
   else if(strcmp(topic, topic_step.c_str()) == 0) {
-    set_step_unit(payload);
+    set_step(payload);
   }
   else if(strcmp(cmd.c_str(), "action") == 0) {
     // click();
@@ -245,22 +244,45 @@ void unsubscribe_trigger(String trigger){
   client.unsubscribe(topic.c_str());
 }
 
-void set_step_unit(String payload){
+void set_step(String payload){
   StaticJsonDocument<200> doc;
   deserializeJson(doc, payload);
 
-  const int unit = doc["step"];
+  const int unit = doc["step_unit"];
 
-  if(unit > 100)return;
-  else if(unit < 1)return;
-  step_unit = unit;
+  if(doc.containsKey("current_step")){
+    step = doc["current_step"];
+    step_unit = unit;
+  }
+  else
+  {
+    if(unit > 100)return;
+    else if(unit < 1)return;
+    step_unit = unit;
+
+    // Init cur step 0
+    int steps = map(-1 * step, -360, 360, -REVOLUTION, REVOLUTION);
+    myStepper.step(steps);
+  }
 }
 
 void rotate(int direction){
-  int angle = STEP_BASE * step_unit;
+  int angle;
+
   if(direction == DOWN){
-    angle *= -1;
+    step -= step_unit;
+    if(step < step_unit){
+      angle = abs(step - step_unit) * STEP_BASE;
+    }
+    else{
+      angle = -1 * STEP_BASE * step_unit;;
+    }
   }
+  else if(direction == UP){
+    step += step_unit;
+    angle = STEP_BASE * step_unit;
+  }
+
 
   int steps = map(angle, -360, 360, -REVOLUTION, REVOLUTION);
 
