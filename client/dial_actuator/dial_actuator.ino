@@ -3,6 +3,8 @@
 #include <ArduinoJson.h>
 #include <esp_sleep.h>
 #include <Stepper.h>
+#include <sstream>
+#include <vector>
 
 // 디바이스 정보
 const char* client_id = "da0X76";
@@ -20,13 +22,14 @@ const char* mqtt_user = NULL;
 const char* mqtt_password = NULL;
 const char* topic_connect = "hub/connect";
 String topic_triggers;
+String topic_dial;
 String topic_subscribe;
 String topic_unsubscribe;
 String topic_disconnect;
 String topic_action;
 String topic_down;
 String topic_up;
-String topic_set_step;
+String topic_step;
 
 const int REVOLUTION = 2048;
 const int SM1 = 1;
@@ -37,11 +40,25 @@ const int DOWN = 0;
 const int UP = 1;
 const int STEP_BASE = 3;
 static int step_unit = 1;
-Stepper myStepper(REVOLUTION, SM1, SM2, SM3, SM4);
+static int step = 0;
+// IN4, IN2, IN3, IN1
+Stepper myStepper(REVOLUTION, SM4, SM2, SM3, SM1);
 
 // MQTT 객체
 WiFiClient espClient;
 PubSubClient client(espClient);
+
+String get_cmd(const String& data, char delimiter) {
+  int start = 0;
+  int end = data.indexOf(delimiter);
+
+  start = end + 1;
+  end = data.indexOf(delimiter, start);
+
+  String cmd = data.substring(start, end);
+
+  return cmd;
+}
 
 // ssid와 password 정보로 WiFi 연결
 void setup_wifi() {
@@ -79,6 +96,8 @@ void reconnect() {
       // 필요한 토픽 구독
       client.subscribe(topic_triggers.c_str());
       delay(100);
+      client.subscribe(topic_set_dial.c_str());
+      delay(100);
       client.subscribe(topic_subscribe.c_str());
       delay(100);
       client.subscribe(topic_unsubscribe.c_str());
@@ -89,7 +108,7 @@ void reconnect() {
       delay(100);
       client.subscribe(topic_up.c_str());
       delay(100);
-      client.subscribe(topic_set_step.c_str());
+      client.subscribe(topic_step.c_str());
       delay(100);
       client.subscribe(topic_disconnect.c_str());
     } else {
@@ -116,6 +135,8 @@ void callback(char* topic, byte* message, unsigned int length) {
   }
   Serial.println(payload);
 
+  String cmd = get_cmd(topic, '/');
+  Serial.println(cmd);
   if(strcmp(topic, topic_triggers.c_str()) == 0){
     subscribe_trigger_list(payload);
   }
@@ -125,16 +146,16 @@ void callback(char* topic, byte* message, unsigned int length) {
   else if(strcmp(topic, topic_unsubscribe.c_str()) == 0){
     unsubscribe_trigger(payload);
   }
-  else if(strcmp(topic, topic_action.c_str()) == 0) {
-    // click();
-  }
-  else if(strcmp(topic, topic_set_step.c_str()) == 0) {
+  else if(strcmp(topic, topic_step.c_str()) == 0) {
     set_step_unit(payload);
   }
-  else if(strcmp(topic, topic_down.c_str()) == 0) {
+  else if(strcmp(cmd.c_str(), "action") == 0) {
+    // click();
+  }
+  else if(strcmp(cmd.c_str(), "down") == 0) {
     rotate(DOWN);
   }
-  else if(strcmp(topic, topic_up.c_str()) == 0) {
+  else if(strcmp(cmd.c_str(), "up") == 0) {
     rotate(UP);
   }
   else if(strcmp(topic, topic_disconnect.c_str()) == 0) {
@@ -159,16 +180,17 @@ void setup_payload_connect() {
 // 토픽 초기화
 void setup_topic() {
   topic_triggers = String("server/triggers/") + client_type  + "/" + client_id;
+  topic_set_dial = String("server/dial/") + client_type + "/" + client_id;
 
   topic_subscribe = String("server/subscribe/") + client_type  + "/" + client_id;
-  topic_subscribe = String("server/unsubscribe/") + client_type  + "/" + client_id;
+  topic_unsubscribe = String("server/unsubscribe/") + client_type  + "/" + client_id;
 
   topic_disconnect = String("server/disconnect/") + client_type + "/" + client_id;
 
   topic_action = String("server/action/") + client_type + "/" + client_id;
   topic_down = String("server/down/") + client_type + "/" + client_id;
   topic_up = String("server/up/") + client_type + "/" + client_id;
-  topic_set_step = String("server/step/") + client_type + "/" + client_id;
+  topic_step = String("server/step/") + client_type + "/" + client_id;
 }
 
 void subscribe_trigger_list(String triggers){
@@ -186,7 +208,9 @@ void subscribe_trigger_list(String triggers){
 
     Serial.println("subscribed:\n" + action + '\n' + down + '\n' + up + '\n');
     client.subscribe(action.c_str());
+    delay(100);
     client.subscribe(down.c_str());
+    delay(100);
     client.subscribe(up.c_str());
   }
 }
@@ -198,10 +222,15 @@ void subscribe_trigger(String trigger){
   const char* ctype = doc["type"];
   const char* cid = doc["client_id"];
 
-  String topic = String("server/subscribe/") + ctype + "/" + cid;
+  String action = String("server/action/") + ctype + "/" + cid;
+  String down = String("server/down/") + ctype + "/" + cid;
+  String up = String("server/up/") + ctype + "/" + cid;
 
-  Serial.println("subscribed: " + topic);
-  client.subscribe(topic.c_str());
+  client.subscribe(action.c_str());
+  delay(100);
+  client.subscribe(down.c_str());
+  delay(100);
+  client.subscribe(up.c_str());
 }
 
 void unsubscribe_trigger(String trigger){
@@ -229,7 +258,7 @@ void set_step_unit(String payload){
 
 void rotate(int direction){
   int angle = STEP_BASE * step_unit;
-  if(direction == UP){
+  if(direction == DOWN){
     angle *= -1;
   }
 
