@@ -5,7 +5,8 @@
 
 // 스텝모터의 전체 스텝 수 (28BYJ-48: 2048 스텝 = 360도)
 const int stepsPerRevolution = 2048;
-Stepper myStepper(stepsPerRevolution, 1, 0, 3, 2);
+// IN4, IN2, IN3, IN1
+Stepper myStepper(stepsPerRevolution, 2, 0, 3, 1);
 
 const int step_base = 3;
 static int step_unit = 1;
@@ -18,7 +19,7 @@ void set_step_unit(int val){
 
 void rotate(int direction){
   int angle = step_base * step_unit;
-  if(direction == UP){
+  if(direction == DOWN){
     angle *= -1;
   }
 
@@ -28,7 +29,7 @@ void rotate(int direction){
 
   Serial.print(angle);
   Serial.println(" degree rotated.");
-  delay(500);
+  delay(100);
 }
 
 void setup() {
