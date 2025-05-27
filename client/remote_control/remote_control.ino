@@ -30,7 +30,7 @@ PubSubClient client(espClient);
 unsigned long millis_last = 0;
 
 const int button_pin[3] = {10, 20, 21};
-const int power_pin= 0;
+const int action_pin= 0;
 const int down_pin = 1;
 const int up_pin = 2;
 
@@ -120,13 +120,13 @@ void setup_topic() {
   topic_disconnect = String("server/disconnect/") + client_type + "/" + client_id;
 
   // remote 토픽 설정
-  String topic_power = String("client/action/") + client_type + "/" + client_id;
-  String topic_down = String("client/down/") + client_type + "/" + client_id;
-  String topic_up = String("client/up/") + client_type + "/" + client_id;
+  String topic_action = String("server/action/") + client_type + "/" + client_id;
+  String topic_down = String("server/down/") + client_type + "/" + client_id;
+  String topic_up = String("server/up/") + client_type + "/" + client_id;
 
-  topic_remote[0] = topic_power;
-  topic_remote[1] = topic_down;
-  topic_remote[2] = topic_up;
+  topic_remote[action_pin] = topic_action;
+  topic_remote[down_pin] = topic_down;
+  topic_remote[up_pin] = topic_up;
 }
 
 bool debounce(int pin, bool state_last){
