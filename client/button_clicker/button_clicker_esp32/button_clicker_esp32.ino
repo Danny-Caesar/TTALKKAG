@@ -25,7 +25,7 @@ String topic_triggers;
 String topic_subscribe;
 String topic_unsubscribe;
 String topic_disconnect;
-String topic_click;
+String topic_action;
 
 // Servo 정보
 const int angle_initial = 100;
@@ -38,6 +38,18 @@ PubSubClient client(espClient);
 
 // 서보 모터 객체
 Servo servo;
+
+String get_cmd(const String& data, char delimiter) {
+  int start = 0;
+  int end = data.indexOf(delimiter);
+
+  start = end + 1;
+  end = data.indexOf(delimiter, start);
+
+  String cmd = data.substring(start, end);
+
+  return cmd;
+}
 
 // ssid와 password 정보로 WiFi 연결
 void setup_wifi() {
@@ -79,7 +91,7 @@ void reconnect() {
       delay(500);
       client.subscribe(topic_unsubscribe.c_str());
       delay(500);
-      client.subscribe(topic_click.c_str());
+      client.subscribe(topic_action.c_str());
       delay(500);
       client.subscribe(topic_disconnect.c_str());
     } else {
@@ -106,6 +118,7 @@ void callback(char* topic, byte* message, unsigned int length) {
   }
   Serial.println(payload);
 
+  String cmd = get_cmd(topic, '/');
   if(strcmp(topic, topic_triggers.c_str()) == 0){
     subscribe_trigger_list(payload);
   }
@@ -115,8 +128,8 @@ void callback(char* topic, byte* message, unsigned int length) {
   else if(strcmp(topic, topic_unsubscribe.c_str()) == 0){
     unsubscribe_trigger(payload);
   }
-  else if(strcmp(topic, topic_click.c_str()) == 0) {
-    // click 토픽 처리
+  else if(strcmp(cmd.c_str(), "action") == 0) {
+    // action 토픽 처리
     click();
   }
   else if(strcmp(topic, topic_disconnect.c_str()) == 0) {
@@ -148,8 +161,8 @@ void setup_topic() {
   // disconnect 토픽 설정
   topic_disconnect = String("server/disconnect/") + client_type + "/" + client_id;
 
-  // click 토픽 설정
-  topic_click = String("server/action/") + client_type + "/" + client_id;
+  // action 토픽 설정
+  topic_action = String("server/action/") + client_type + "/" + client_id;
 }
 
 void subscribe_trigger_list(String triggers){
@@ -161,10 +174,10 @@ void subscribe_trigger_list(String triggers){
   for(int i=0;i<client_type.size();i++){
     const char* ctype = client_type[i];
     const char* cid = client_id[i];
-    String trigger = String("client/action/") + ctype + "/" + cid;
+    String action = String("client/action/") + ctype + "/" + cid;
 
     Serial.println("subscribed: " + trigger);
-    client.subscribe(trigger.c_str());
+    client.subscribe(action.c_str());
   }
 }
 
@@ -175,10 +188,10 @@ void subscribe_trigger(String trigger){
   const char* ctype = doc["type"];
   const char* cid = doc["client_id"];
 
-  String topic = String("server/subscribe/") + ctype + "/" + cid;
+  String action = String("server/action/") + ctype + "/" + cid;
 
-  Serial.println("subscribed: " + topic);
-  client.subscribe(topic.c_str());
+  Serial.println("subscribed: " + action);
+  client.subscribe(action.c_str());
 }
 
 void unsubscribe_trigger(String trigger){
@@ -188,9 +201,9 @@ void unsubscribe_trigger(String trigger){
   const char* ctype = doc["type"];
   const char* cid = doc["client_id"];
 
-  String topic = String("server/unsubscribe/") + ctype + "/" + cid;
+  String action = String("server/action/") + ctype + "/" + cid;
 
-  client.unsubscribe(topic.c_str());
+  client.unsubscribe(action.c_str());
 }
 
 // 서보 모터 초기화
