@@ -95,8 +95,6 @@ void reconnect() {
       // 필요한 토픽 구독
       client.subscribe(topic_triggers.c_str());
       delay(100);
-      client.subscribe(topic_set_dial.c_str());
-      delay(100);
       client.subscribe(topic_subscribe.c_str());
       delay(100);
       client.subscribe(topic_unsubscribe.c_str());
@@ -135,7 +133,6 @@ void callback(char* topic, byte* message, unsigned int length) {
   Serial.println(payload);
 
   String cmd = get_cmd(topic, '/');
-  Serial.println(cmd);
   if(strcmp(topic, topic_triggers.c_str()) == 0){
     subscribe_trigger_list(payload);
   }
@@ -179,7 +176,6 @@ void setup_payload_connect() {
 // 토픽 초기화
 void setup_topic() {
   topic_triggers = String("server/triggers/") + client_type  + "/" + client_id;
-  topic_set_dial = String("server/dial/") + client_type + "/" + client_id;
 
   topic_subscribe = String("server/subscribe/") + client_type  + "/" + client_id;
   topic_unsubscribe = String("server/unsubscribe/") + client_type  + "/" + client_id;
@@ -239,9 +235,15 @@ void unsubscribe_trigger(String trigger){
   const char* ctype = doc["type"];
   const char* cid = doc["client_id"];
 
-  String topic = String("server/unsubscribe/") + ctype + "/" + cid;
+  String action = String("server/action/") + ctype + "/" + cid;
+  String down = String("server/down/") + ctype + "/" + cid;
+  String up = String("server/up/") + ctype + "/" + cid;
 
-  client.unsubscribe(topic.c_str());
+  client.unsubscribe(action.c_str());
+  delay(100);
+  client.unsubscribe(down.c_str());
+  delay(100);
+  client.unsubscribe(up.c_str());
 }
 
 void set_step(String payload){
