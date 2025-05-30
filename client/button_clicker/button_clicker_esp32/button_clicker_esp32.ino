@@ -4,8 +4,6 @@
 #include <esp_sleep.h>
 #include "ESP32Servo.h"
 
-#define SERVO_PIN 4
-
 // 디바이스 정보
 const char* client_id = "bc0X00";
 const char* client_type = "button_clicker";
@@ -16,10 +14,11 @@ const char* ssid = "kdg";
 const char* password = "12345678";
 
 // MQTT 정보
-const char* mqtt_server = "192.168.137.39"; // MQTT Broker IPv4
-const int mqtt_port = 1883;
-const char* mqtt_user = NULL;
-const char* mqtt_password = NULL;
+const char* MQTT_SERVER = "192.168.137.39"; // MQTT Broker IPv4
+const int MQTT_PORT = 1883;
+const char* MQTT_USER = NULL;
+const char* MQTT_PASSWORD = NULL;
+const int DELAY_SUB = 500;
 const char* topic_connect = "hub/connect";
 String topic_triggers;
 String topic_subscribe;
@@ -28,9 +27,10 @@ String topic_disconnect;
 String topic_action;
 
 // Servo 정보
-const int angle_initial = 100;
-const int angle_target = 75;
-const int delay_click = 1000;
+const int ANGLE_INITIAL = 100;
+const int ANGLE_TARGET = 75;
+const int DELAY_CLICK = 1000;
+const int SERVO_PIN = 4;
 
 // MQTT 객체
 WiFiClient espClient;
@@ -77,7 +77,7 @@ void reconnect() {
     Serial.print("Attempting MQTT connection...");
 
     // 서버에 MQTT 연결
-    if (client.connect(client_id, mqtt_user, mqtt_password)) {
+    if (client.connect(client_id, MQTT_USER, MQTT_PASSWORD)) {
       // 성공
       Serial.println("connected");
       
@@ -86,13 +86,13 @@ void reconnect() {
 
       // 필요한 토픽 구독
       client.subscribe(topic_triggers.c_str());
-      delay(500);
+      delay(DELAY_SUB);
       client.subscribe(topic_subscribe.c_str());
-      delay(500);
+      delay(DELAY_SUB);
       client.subscribe(topic_unsubscribe.c_str());
-      delay(500);
+      delay(DELAY_SUB);
       client.subscribe(topic_action.c_str());
-      delay(500);
+      delay(DELAY_SUB);
       client.subscribe(topic_disconnect.c_str());
     } else {
       // 실패
@@ -133,7 +133,15 @@ void callback(char* topic, byte* message, unsigned int length) {
     click();
   }
   else if(strcmp(topic, topic_disconnect.c_str()) == 0) {
-    // disconnect 토픽 처리
+    client.unsubscribe(topic_triggers.c_str());
+    delay(DELAY_SUB);
+    client.unsubscribe(topic_subscribe.c_str());
+    delay(DELAY_SUB);
+    client.unsubscribe(topic_unsubscribe.c_str());
+    delay(DELAY_SUB);
+    client.unsubscribe(topic_disconnect.c_str());
+    delay(DELAY_SUB);
+    client.unsubscribe(topic_action.c_str());
     client.disconnect();
     // sleep 상태에 돌입
     esp_deep_sleep_start();
@@ -156,7 +164,7 @@ void setup_topic() {
   topic_triggers = String("server/triggers/") + client_type  + "/" + client_id;
 
   topic_subscribe = String("server/subscribe/") + client_type  + "/" + client_id;
-  topic_subscribe = String("server/unsubscribe/") + client_type  + "/" + client_id;
+  topic_unsubscribe = String("server/unsubscribe/") + client_type  + "/" + client_id;
 
   // disconnect 토픽 설정
   topic_disconnect = String("server/disconnect/") + client_type + "/" + client_id;
@@ -176,7 +184,7 @@ void subscribe_trigger_list(String triggers){
     const char* cid = client_id[i];
     String action = String("client/action/") + ctype + "/" + cid;
 
-    Serial.println("subscribed: " + trigger);
+    Serial.println("subscribed: " + action);
     client.subscribe(action.c_str());
   }
 }
@@ -210,15 +218,15 @@ void unsubscribe_trigger(String trigger){
 void setup_servo() {
   servo.setPeriodHertz(50);
   servo.attach(SERVO_PIN, 500, 2400);
-  servo.write(angle_initial);
+  servo.write(ANGLE_INITIAL);
 }
 
 // 클릭 동작
 void click() {
-  servo.write(angle_target);
-  delay(delay_click);
-  servo.write(angle_initial);
-  delay(delay_click);
+  servo.write(ANGLE_TARGET);
+  delay(DELAY_CLICK);
+  servo.write(ANGLE_INITIAL);
+  delay(DELAY_CLICK);
 }
 
 void setup() {
@@ -231,7 +239,7 @@ void setup() {
 
   setup_servo();
 
-  client.setServer(mqtt_server, mqtt_port);
+  client.setServer(MQTT_SERVER, MQTT_PORT);
   client.setCallback(callback);
   client.setKeepAlive(60);
 }
