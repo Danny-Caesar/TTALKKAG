@@ -20,6 +20,7 @@ const char* mqtt_server = "192.168.137.39"; // MQTT Broker IPv4
 const int mqtt_port = 1883;
 const char* mqtt_user = NULL;
 const char* mqtt_password = NULL;
+const int DELAY_SUB = 500;
 const char* topic_connect = "hub/connect";
 String topic_triggers;
 String topic_subscribe;
@@ -94,19 +95,19 @@ void reconnect() {
 
       // 필요한 토픽 구독
       client.subscribe(topic_triggers.c_str());
-      delay(100);
+      delay(DELAY_SUB);
       client.subscribe(topic_subscribe.c_str());
-      delay(100);
+      delay(DELAY_SUB);
       client.subscribe(topic_unsubscribe.c_str());
-      delay(100);
+      delay(DELAY_SUB);
       client.subscribe(topic_action.c_str());
-      delay(100);
+      delay(DELAY_SUB);
       client.subscribe(topic_down.c_str());
-      delay(100);
+      delay(DELAY_SUB);
       client.subscribe(topic_up.c_str());
-      delay(100);
+      delay(DELAY_SUB);
       client.subscribe(topic_step.c_str());
-      delay(100);
+      delay(DELAY_SUB);
       client.subscribe(topic_disconnect.c_str());
     } else {
       // 실패
@@ -155,7 +156,21 @@ void callback(char* topic, byte* message, unsigned int length) {
     rotate(UP);
   }
   else if(strcmp(topic, topic_disconnect.c_str()) == 0) {
-    // disconnect 토픽 처리
+    client.unsubscribe(topic_triggers.c_str());
+    delay(DELAY_SUB);
+    client.unsubscribe(topic_subscribe.c_str());
+    delay(DELAY_SUB);
+    client.unsubscribe(topic_unsubscribe.c_str());
+    delay(DELAY_SUB);
+    client.unsubscribe(topic_disconnect.c_str());
+    delay(DELAY_SUB);
+    client.unsubscribe(topic_action.c_str());
+    delay(DELAY_SUB);
+    client.unsubscribe(topic_down.c_str());
+    delay(DELAY_SUB);
+    client.unsubscribe(topic_up.c_str());
+    delay(DELAY_SUB);
+    client.unsubscribe(topic_step.c_str());
     client.disconnect();
     // sleep 상태에 돌입
     esp_deep_sleep_start();
@@ -203,9 +218,9 @@ void subscribe_trigger_list(String triggers){
 
     Serial.println("subscribed:\n" + action + '\n' + down + '\n' + up + '\n');
     client.subscribe(action.c_str());
-    delay(100);
+    delay(DELAY_SUB);
     client.subscribe(down.c_str());
-    delay(100);
+    delay(DELAY_SUB);
     client.subscribe(up.c_str());
   }
 }
@@ -222,9 +237,9 @@ void subscribe_trigger(String trigger){
   String up = String("server/up/") + ctype + "/" + cid;
 
   client.subscribe(action.c_str());
-  delay(100);
+  delay(DELAY_SUB);
   client.subscribe(down.c_str());
-  delay(100);
+  delay(DELAY_SUB);
   client.subscribe(up.c_str());
 }
 
