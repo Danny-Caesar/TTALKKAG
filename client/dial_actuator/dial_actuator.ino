@@ -16,7 +16,7 @@ const char* ssid = "kdg";
 const char* password = "12345678";
 
 // MQTT 정보
-const char* mqtt_server = "192.168.137.39"; // MQTT Broker IPv4
+const char* mqtt_server = "192.168.137.67"; // MQTT Broker IPv4
 const int mqtt_port = 1883;
 const char* mqtt_user = NULL;
 const char* mqtt_password = NULL;
@@ -265,11 +265,11 @@ void set_step(String payload){
   StaticJsonDocument<200> doc;
   deserializeJson(doc, payload);
 
-  const int unit = doc["step_unit"];
+  const int unit = doc["stepUnit"];
 
-  if(doc.containsKey("current_step")){
+  if(doc.containsKey("currentStep")){
     // Set current step.
-    step = doc["current_step"];
+    step = doc["currentStep"];
     step_unit = unit;
   }
   else
