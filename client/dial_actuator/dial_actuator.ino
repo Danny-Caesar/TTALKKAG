@@ -268,38 +268,42 @@ void set_step(String payload){
   const int unit = doc["step_unit"];
 
   if(doc.containsKey("current_step")){
+    // Set current step.
     step = doc["current_step"];
     step_unit = unit;
   }
   else
   {
-    if(unit > 100)return;
-    else if(unit < 1)return;
-    step_unit = unit;
-
-    // Init cur step 0
-    int steps = map(-1 * step, -360, 360, -REVOLUTION, REVOLUTION);
+    // Init cur step 0.
+    int steps = map(-1 * step * STEP_BASE, -360, 360, -REVOLUTION, REVOLUTION);
     myStepper.step(steps);
   }
+
+  // Set step unit.
+  if(unit > 100)return;
+  else if(unit < 1)return;
+  step_unit = unit;
 }
 
 void rotate(int direction){
   int angle;
 
   if(direction == DOWN){
-    step -= step_unit;
+    if(step <= 0) return;
     if(step < step_unit){
-      angle = abs(step - step_unit) * STEP_BASE;
+      angle = (step - step_unit) * STEP_BASE;
+      step = 0;
     }
     else{
       angle = -1 * STEP_BASE * step_unit;;
+      step -= step_unit;
     }
   }
   else if(direction == UP){
+    if(step + step_unit > 100) return;
     step += step_unit;
     angle = STEP_BASE * step_unit;
   }
-
 
   int steps = map(angle, -360, 360, -REVOLUTION, REVOLUTION);
 
