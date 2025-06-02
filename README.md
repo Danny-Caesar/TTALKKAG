@@ -1,38 +1,26 @@
-<a href="https://club-project-one.vercel.app/" target="_blank">
-<img src="https://github.com/user-attachments/assets/2368e03a-a5c1-4267-a486-616542e8f06e" alt="배너" width="100%"/>
-</a>
-
-<br/>
-<br/>
-
 # 딸깍 TTALKKAG
-더 똑똑하게 살고 싶은 당신을 위해
+![readme_mockup2](https://github.com/user-attachments/assets/e16f3c66-62b0-4fd4-a7bd-81e4dcfde3ab)
 
-[딸깍-어플리케이션 리포지토리](https://github.com/pknu-wap/2025_1_Embedded1_TTALKKAG)
-
-<br/>
-<br/>
-
-# Team Members (팀원)
-| 김동건 | 강유경 | 장혜림 | 홍우민 | 고근호 | 김예람 |
-|:------:|:------:|:------:|:------:|:------:|:------:|
-| <img src="https://avatars.githubusercontent.com/u/125544913?v=4" alt="김동건" width="150"> | <img src="https://avatars.githubusercontent.com/u/202641007?v=4" alt="강유경" width="150"> | <img src="https://avatars.githubusercontent.com/u/202640692?v=4" alt="장혜림" width="150"> | <img src="https://avatars.githubusercontent.com/u/155062635?v=4" alt="홍우민" width="150"> | <img src="https://avatars.githubusercontent.com/u/95072015?v=4" alt="고근호" width="150"> | <img src="https://avatars.githubusercontent.com/u/202640579?v=4" alt="김예람" width="150"> |
-| Raspberry Pi | Arduino | RN | RN | Spring | Design |
-| [GitHub](https://github.com/Danny-Caesar) | [GitHub](https://github.com/dbrud919) | [GitHub](https://github.com/hyerim819) | [GitHub](https://github.com/hongwoomin02) | [GitHub](https://github.com/kokeunho) | [GitHub](https://github.com/rlaexram) |
+- 어플리케이션 리포지토리: https://github.com/pknu-wap/2025_1_Embedded1_TTALKKAG
 
 <br/>
 <br/>
 
-# Key Features (주요 기능)
+## 프로젝트 소개
+- '딸깍'은 일상 속의 편리함을 높이고 싶은 사람들을 위한 스마트 홈 시스템 입니다.
+- ISO 표준 통신 프로토콜인 MQTT와 시스템 전반을 조작·관리하는 앱을 활용해 맞춤형 사용자 경험을 제공합니다.
+
+<br/>
+<br/>
+
+## 프로젝트 특징
 - **MQTT**:
   - MQTT(Message Queuing Telemetry Transport)는 ISO 표준 발행-구독 기반의 메시징 프로토콜입니다.
-  - MQTT 오픈소스 및 라이브러리 없이 MQTT 브로커를 구현했습니다.
-  - 브로커를 중심으로 디바이스(버튼 클리커, 다이얼 액추에이터)와 트리거(개폐감지센서, 스마트폰 앱) 간 통신을 수행합니다.
+  - MQTT 오픈소스 및 라이브러리 없이 MQTT 브로커를 구현하였습니다.
 
 - **클라이언트**:
-  - 조작에 따라 버튼을 누르는 버튼 클리커
-  - 단계별로 다이얼을 회전하는 다이얼 액추에이터
-  - 문 열림을 감지하는 개폐감지센서
+  - MCU(마이크로 컨트롤러 유닛)을 사용해 간단한 통신과 동작을 사용하는 클라이언트를 구성했습니다.
+  - 클라이언트는 트리거/디바이스로 두 종류가 있으며 서로 브로커를 통해 통신합니다.
 
 - **어플리케이션**:
   - 시스템에 연결된 클라이언트를 연결하고 관리합니다.
@@ -42,16 +30,29 @@
 <br/>
 <br/>
 
-# Technology Stack (기술 스택)
-|  |  |
-|-----------------|-----------------|
-| Arduino    |  ![Arduino](https://img.shields.io/badge/-Arduino-00979D?style=for-the-badge&logo=Arduino&logoColor=white) | 
-| Raspberry Pi    |  ![Raspberry Pi](https://img.shields.io/badge/-Raspberry_Pi-C51A4A?style=for-the-badge&logo=Raspberry-Pi) | 
-| React Native    | ![React Native](https://img.shields.io/badge/react_native-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB) | 
-| Spring    | ![Spring](https://img.shields.io/badge/spring-%236DB33F.svg?style=for-the-badge&logo=spring&logoColor=white) |
+## 팀 구성
+| **김동건** | **강유경** | **장혜림** | **홍우민** | **고근호** | **김예람** |
+|:------:|:------:|:------:|:------:|:------:|:------:|
+| <img src="https://avatars.githubusercontent.com/u/125544913?v=4" alt="김동건" height=150 width=150> | <img src="https://avatars.githubusercontent.com/u/202641007?v=4" alt="강유경" height=150 width=150> | <img src="https://avatars.githubusercontent.com/u/202640692?v=4" alt="장혜림" height=150 width=150> | <img src="https://avatars.githubusercontent.com/u/155062635?v=4" alt="홍우민" height=150 width=150> | <img src="https://avatars.githubusercontent.com/u/95072015?v=4" alt="고근호" height=150 width=150> | <img src="https://avatars.githubusercontent.com/u/202640579?v=4" alt="김예람" height=150 width=150> |
+| [@Danny-Caesar](https://github.com/Danny-Caesar) | [@dbrud919](https://github.com/dbrud919) | [@hyerim819](https://github.com/hyerim819) | [@hongwoomin02](https://github.com/hongwoomin02) | [@kokeunho](https://github.com/kokeunho) | [@rlaexram](https://github.com/rlaexram) |
 
 <br/>
 <br/>
+
+## 개발 환경
+|  |  |
+|-----------------|-----------------|
+| Frontend    | ![React Native](https://img.shields.io/badge/react_native-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB) ![JavaScript](https://img.shields.io/badge/javascript-%23323330.svg?style=for-the-badge&logo=javascript&logoColor=%23F7DF1E) | 
+| Backend    |  ![Spring](https://img.shields.io/badge/spring-%236DB33F.svg?style=for-the-badge&logo=spring&logoColor=white) ![Java](https://img.shields.io/badge/java-%23ED8B00.svg?style=for-the-badge&logo=openjdk&logoColor=white)| 
+| Embedded System    | ![Raspberry Pi](https://img.shields.io/badge/-Raspberry_Pi-C51A4A?style=for-the-badge&logo=Raspberry-Pi) ![Debian](https://img.shields.io/badge/Debian-D70A53?style=for-the-badge&logo=debian&logoColor=white) ![Espressif](https://img.shields.io/badge/espressif-E7352C.svg?style=for-the-badge&logo=espressif&logoColor=white) ![C++](https://img.shields.io/badge/c++-%2300599C.svg?style=for-the-badge&logo=c%2B%2B&logoColor=white)| 
+| Hosting    | ![AWS](https://img.shields.io/badge/AWS-%23FF9900.svg?style=for-the-badge&logo=amazon-aws&logoColor=white) |
+
+<br/>
+<br/>
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/7619f462-04b2-4ec2-8bdf-cbf1409a222c" alt="배너" width="80%" horizontal_align="center"/>
+</p>
 
 <!-- # 6. Project Structure (프로젝트 구조)
 ```plaintext
