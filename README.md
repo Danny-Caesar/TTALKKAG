@@ -33,7 +33,7 @@
 ## 팀 구성
 | **김동건** | **강유경** | **장혜림** | **홍우민** | **고근호** | **김예람** |
 |:------:|:------:|:------:|:------:|:------:|:------:|
-| <img src="https://avatars.githubusercontent.com/u/125544913?v=4" alt="김동건" width="150"> | <img src="https://avatars.githubusercontent.com/u/202641007?v=4" alt="강유경" width="150"> | <img src="https://avatars.githubusercontent.com/u/202640692?v=4" alt="장혜림" width="150"> | <img src="https://avatars.githubusercontent.com/u/155062635?v=4" alt="홍우민" width="150"> | <img src="https://avatars.githubusercontent.com/u/95072015?v=4" alt="고근호" width="150"> | <img src="https://avatars.githubusercontent.com/u/202640579?v=4" alt="김예람" width="150"> |
+| <img src="https://avatars.githubusercontent.com/u/125544913?v=4" alt="김동건" width="125"> | <img src="https://avatars.githubusercontent.com/u/202641007?v=4" alt="강유경" width="125"> | <img src="https://avatars.githubusercontent.com/u/202640692?v=4" alt="장혜림" width="125"> | <img src="https://avatars.githubusercontent.com/u/155062635?v=4" alt="홍우민" width="125"> | <img src="https://avatars.githubusercontent.com/u/95072015?v=4" alt="고근호" width="125"> | <img src="https://avatars.githubusercontent.com/u/202640579?v=4" alt="김예람" width="125"> |
 | [@Danny-Caesar](https://github.com/Danny-Caesar) | [@dbrud919](https://github.com/dbrud919) | [@hyerim819](https://github.com/hyerim819) | [@hongwoomin02](https://github.com/hongwoomin02) | [@kokeunho](https://github.com/kokeunho) | [@rlaexram](https://github.com/rlaexram) |
 
 <br/>
