@@ -2,9 +2,11 @@
 #include <boost/asio.hpp>
 #include "socket_broker.h"
 #include "subscription/subscription_manager.h"
+#include "logo_display.h"
 
 int main()
 {
+    print_logo();
     boost::asio::io_context io_context;
 
     boost::asio::ip::tcp::acceptor acceptor(
@@ -22,7 +24,12 @@ int main()
         {
             if (!ec)
             {
-                std::cout << "a new connection was established.\n";
+                // tcp connection log
+                boost::asio::ip::tcp::endpoint remote_ep = socket->remote_endpoint();
+                std::string client_ip = remote_ep.address().to_string();
+                // unsigned short client_port = remote_ep.port();
+                std::cout << "소켓에 " << client_ip << "::" << std::getenv("MQTT_PORT") << " 접속.\n";
+
                 std::shared_ptr<socket_broker> broker = std::make_shared<socket_broker>(std::move(*socket));
                 broker->start();  // Start read loop
             }
