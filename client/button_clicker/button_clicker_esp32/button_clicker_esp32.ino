@@ -4,6 +4,8 @@
 #include <esp_sleep.h>
 #include "ESP32Servo.h"
 
+StaticJsonDocument<200> doc;
+
 // 디바이스 정보
 const char* client_id = "bc0X00";
 const char* client_type = "button_clicker";
@@ -18,7 +20,7 @@ const char* MQTT_SERVER = "192.168.137.39"; // MQTT Broker IPv4
 const int MQTT_PORT = 1883;
 const char* MQTT_USER = NULL;
 const char* MQTT_PASSWORD = NULL;
-const int DELAY_SUB = 500;
+const int DELAY_SUB = 200;
 const char* topic_connect = "hub/connect";
 String topic_triggers;
 String topic_subscribe;
@@ -27,8 +29,8 @@ String topic_disconnect;
 String topic_action;
 
 // Servo 정보
-const int ANGLE_INITIAL = 100;
-const int ANGLE_TARGET = 75;
+const int ANGLE_INITIAL = 80;
+const int ANGLE_TARGET = 115;
 const int DELAY_CLICK = 1000;
 const int SERVO_PIN = 4;
 
@@ -80,9 +82,6 @@ void reconnect() {
     if (client.connect(client_id, MQTT_USER, MQTT_PASSWORD)) {
       // 성공
       Serial.println("connected");
-      
-      // 연결 토픽 발행 (retain = false, QoS: 1)
-      client.publish(topic_connect, (const uint8_t*)json_payload_connect, strlen(json_payload_connect), false);
 
       // 필요한 토픽 구독
       client.subscribe(topic_triggers.c_str());
@@ -94,6 +93,9 @@ void reconnect() {
       client.subscribe(topic_action.c_str());
       delay(DELAY_SUB);
       client.subscribe(topic_disconnect.c_str());
+
+      // 연결 토픽 발행 (retain = false, QoS: 1)
+      client.publish(topic_connect, (const uint8_t*)json_payload_connect, strlen(json_payload_connect), false);
     } else {
       // 실패
       Serial.print("failed, rc=");
@@ -151,7 +153,6 @@ void callback(char* topic, byte* message, unsigned int length) {
 // 연결 메시지 초기화
 void setup_payload_connect() {
   // 연결 메시지 생성
-  StaticJsonDocument<200> doc;
   doc["clientId"] = client_id;
   doc["type"] = client_type;
   
@@ -174,7 +175,6 @@ void setup_topic() {
 }
 
 void subscribe_trigger_list(String triggers){
-  StaticJsonDocument<200> doc;
   deserializeJson(doc, triggers);
   JsonArray client_type = doc["clientType"].as<JsonArray>();
   JsonArray client_id = doc["clientId"].as<JsonArray>();
@@ -182,7 +182,7 @@ void subscribe_trigger_list(String triggers){
   for(int i=0;i<client_type.size();i++){
     const char* ctype = client_type[i];
     const char* cid = client_id[i];
-    String action = String("client/action/") + ctype + "/" + cid;
+    String action = String("server/action/") + ctype + "/" + cid;
 
     Serial.println("subscribed: " + action);
     client.subscribe(action.c_str());
@@ -190,11 +190,10 @@ void subscribe_trigger_list(String triggers){
 }
 
 void subscribe_trigger(String trigger){
-  StaticJsonDocument<200> doc;
   deserializeJson(doc, trigger);
 
-  const char* ctype = doc["type"];
-  const char* cid = doc["client_id"];
+  const char* ctype = doc["clientType"];
+  const char* cid = doc["clientId"];
 
   String action = String("server/action/") + ctype + "/" + cid;
 
@@ -203,11 +202,10 @@ void subscribe_trigger(String trigger){
 }
 
 void unsubscribe_trigger(String trigger){
-  StaticJsonDocument<200> doc;
   deserializeJson(doc, trigger);
 
-  const char* ctype = doc["type"];
-  const char* cid = doc["client_id"];
+  const char* ctype = doc["clientType"];
+  const char* cid = doc["clientId"];
 
   String action = String("server/action/") + ctype + "/" + cid;
 

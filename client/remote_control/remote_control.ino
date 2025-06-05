@@ -6,8 +6,8 @@
 #define INPUT_DELAY 50
 
 // 디바이스 정보
-const char* client_id = "rc0X8F";
-const char* client_type = "remote_control";
+const char* client_id = "rc0X99";
+const char* client_type = "remote";
 char json_payload_connect[256];
 
 // WiFi 정보
@@ -15,7 +15,7 @@ const char* ssid = "kdg";
 const char* password = "12345678";
 
 // MQTT 정보
-const char* mqtt_server = "192.168.137.39"; // MQTT Broker IPv4
+const char* mqtt_server = "192.168.137.67"; // MQTT Broker IPv4
 const int mqtt_port = 1883;
 const char* mqtt_user = NULL;
 const char* mqtt_password = NULL;

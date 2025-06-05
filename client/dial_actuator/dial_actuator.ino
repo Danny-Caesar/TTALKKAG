@@ -6,6 +6,8 @@
 #include <sstream>
 #include <vector>
 
+StaticJsonDocument<200> doc;
+
 // 디바이스 정보
 const char* client_id = "da0X76";
 const char* client_type = "dial_actuator";
@@ -20,7 +22,7 @@ const char* mqtt_server = "192.168.137.67"; // MQTT Broker IPv4
 const int mqtt_port = 1883;
 const char* mqtt_user = NULL;
 const char* mqtt_password = NULL;
-const int DELAY_SUB = 500;
+const int DELAY_SUB = 200;
 const char* topic_connect = "hub/connect";
 String topic_triggers;
 String topic_subscribe;
@@ -89,9 +91,6 @@ void reconnect() {
     if (client.connect(client_id, mqtt_user, mqtt_password)) {
       // 성공
       Serial.println("connected");
-      
-      // 연결 토픽 발행 (retain = false, QoS: 1)
-      client.publish(topic_connect, (const uint8_t*)json_payload_connect, strlen(json_payload_connect), false);
 
       // 필요한 토픽 구독
       client.subscribe(topic_triggers.c_str());
@@ -109,6 +108,9 @@ void reconnect() {
       client.subscribe(topic_step.c_str());
       delay(DELAY_SUB);
       client.subscribe(topic_disconnect.c_str());
+
+      // 연결 토픽 발행 (retain = false, QoS: 1)
+      client.publish(topic_connect, (const uint8_t*)json_payload_connect, strlen(json_payload_connect), false);
     } else {
       // 실패
       Serial.print("failed, rc=");
@@ -180,7 +182,6 @@ void callback(char* topic, byte* message, unsigned int length) {
 // 연결 메시지 초기화
 void setup_payload_connect() {
   // 연결 메시지 생성
-  StaticJsonDocument<200> doc;
   doc["clientId"] = client_id;
   doc["type"] = client_type;
   
@@ -204,7 +205,6 @@ void setup_topic() {
 }
 
 void subscribe_trigger_list(String triggers){
-  StaticJsonDocument<200> doc;
   deserializeJson(doc, triggers);
   JsonArray client_type = doc["clientType"].as<JsonArray>();
   JsonArray client_id = doc["clientId"].as<JsonArray>();
@@ -226,11 +226,10 @@ void subscribe_trigger_list(String triggers){
 }
 
 void subscribe_trigger(String trigger){
-  StaticJsonDocument<200> doc;
   deserializeJson(doc, trigger);
 
-  const char* ctype = doc["type"];
-  const char* cid = doc["client_id"];
+  const char* ctype = doc["clientType"];
+  const char* cid = doc["clientId"];
 
   String action = String("server/action/") + ctype + "/" + cid;
   String down = String("server/down/") + ctype + "/" + cid;
@@ -244,11 +243,10 @@ void subscribe_trigger(String trigger){
 }
 
 void unsubscribe_trigger(String trigger){
-  StaticJsonDocument<200> doc;
   deserializeJson(doc, trigger);
 
-  const char* ctype = doc["type"];
-  const char* cid = doc["client_id"];
+  const char* ctype = doc["clientType"];
+  const char* cid = doc["clientId"];
 
   String action = String("server/action/") + ctype + "/" + cid;
   String down = String("server/down/") + ctype + "/" + cid;
@@ -275,8 +273,9 @@ void set_step(String payload){
   else
   {
     // Init cur step 0.
-    int steps = map(-1 * step * STEP_BASE, -360, 360, -REVOLUTION, REVOLUTION);
+    int steps = map(step * STEP_BASE, -360, 360, -REVOLUTION, REVOLUTION);
     myStepper.step(steps);
+    step = 0;
   }
 
   // Set step unit.
@@ -295,14 +294,14 @@ void rotate(int direction){
       step = 0;
     }
     else{
-      angle = -1 * STEP_BASE * step_unit;;
+      angle = STEP_BASE * step_unit;;
       step -= step_unit;
     }
   }
   else if(direction == UP){
     if(step + step_unit > 100) return;
     step += step_unit;
-    angle = STEP_BASE * step_unit;
+    angle = -1 * STEP_BASE * step_unit;
   }
 
   int steps = map(angle, -360, 360, -REVOLUTION, REVOLUTION);
