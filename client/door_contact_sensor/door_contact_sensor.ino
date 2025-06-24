@@ -3,12 +3,14 @@
 #include <ArduinoJson.h>
 #include <esp_sleep.h>
 
-#define REED_PIN 21
+
+#define REED_PIN 4
 #define INPUT_DELAY 500
+#define DETECT_DELAY 3000
 
 // 디바이스 정보
 const char* client_id = "dcs0X00";
-const char* client_type = "door_contact_sensor";
+const char* client_type = "door_sensor";
 char json_payload_connect[256];
 
 // WiFi 정보
@@ -162,6 +164,7 @@ void loop() {
     if(reed_last == LOW && reed_current == HIGH){
       Serial.println("Contact detacted.");
       client.publish(topic_open.c_str(), (const uint8_t*)"", 0, false);
+      delay(DETECT_DELAY);
     }
 
     reed_last = reed_current;
