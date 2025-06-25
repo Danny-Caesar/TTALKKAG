@@ -19,10 +19,22 @@
   - MQTT 오픈소스 및 라이브러리 없이 MQTT 브로커를 구현하였습니다.
 
 - **클라이언트**:
+
+  ![Image](https://github.com/user-attachments/assets/0cdc400e-97e5-4343-93ea-e5434ffc734e)
+  ![Image](https://github.com/user-attachments/assets/3d702c27-f9b5-47f8-9746-85bfd0f460a3)
+
   - MCU(마이크로 컨트롤러 유닛)을 사용해 간단한 통신과 동작을 사용하는 클라이언트를 구성했습니다.
   - 클라이언트는 트리거/디바이스로 두 종류가 있으며 서로 브로커를 통해 통신합니다.
 
 - **어플리케이션**:
+
+  ![Image](https://github.com/user-attachments/assets/16c25fab-ee06-4821-88f7-5831c9f065fd)
+  ![Image](https://github.com/user-attachments/assets/4e68b147-dfbc-43f2-972f-52b7ab449ac3)
+  
+  
+  ![Image](https://github.com/user-attachments/assets/7f2eb74d-e740-48d5-b59f-980559053431)
+  ![Image](https://github.com/user-attachments/assets/09fe8428-8210-4782-976e-d9f12c661e14)
+
   - 스마트 홈에 연결된 디바이스를 사용자가 직접 조작할 수 있습니다.
   - 여러 종류의 트리거를 관리하고, 연결된 디바이스의 동작을 구성할 수 있습니다.
 
