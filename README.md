@@ -61,33 +61,22 @@
 <br/>
 <br/>
 
+## 브로커 구조
+broker/  
+├── broker.cpp  
+├── logo_display.cpp  
+│  
+├── packet/                # mqtt 컨트롤 패킷, 패킷 파서, 패킷 핸들러  
+│  
+├── session/               # 세션, 세션 매니저  
+│  
+├── socket/                # 소켓  
+│  
+└── subscription/          # 구독, 구독 매니저  
+
+<br/>
+<br/>
+
 <p align="center">
   <img src="https://github.com/user-attachments/assets/7619f462-04b2-4ec2-8bdf-cbf1409a222c" alt="배너" width="80%" horizontal_align="center"/>
 </p>
-
-<!-- # 6. Project Structure (프로젝트 구조)
-```plaintext
-project/
-├── client/
-├── server/
-├── .gitignore               # Git 무시 파일 목록
-└── README.md                # 프로젝트 개요 및 사용법
-
-project/
-├── public/
-│   ├── index.html           # HTML 템플릿 파일
-│   └── favicon.ico          # 아이콘 파일
-├── src/
-│   ├── assets/              # 이미지, 폰트 등 정적 파일
-│   ├── components/          # 재사용 가능한 UI 컴포넌트
-│   ├── hooks/               # 커스텀 훅 모음
-│   ├── pages/               # 각 페이지별 컴포넌트
-│   ├── App.js               # 메인 애플리케이션 컴포넌트
-│   ├── index.js             # 엔트리 포인트 파일
-│   ├── index.css            # 전역 css 파일
-│   ├── firebaseConfig.js    # firebase 인스턴스 초기화 파일
-│   package-lock.json    # 정확한 종속성 버전이 기록된 파일로, 일관된 빌드를 보장
-│   package.json         # 프로젝트 종속성 및 스크립트 정의
-├── .gitignore               # Git 무시 파일 목록
-└── README.md                # 프로젝트 개요 및 사용법
---!>
