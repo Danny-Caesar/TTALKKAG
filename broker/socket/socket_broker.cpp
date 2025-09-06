@@ -2,6 +2,7 @@
 #include "socket_broker.h"
 #include "mqtt_control_packet.h"
 #include "packet_handler.h"
+#include "packet_counter.h"
 
 // Constructor
 socket_broker::socket_broker(boost::asio::ip::tcp::socket socket)
@@ -80,6 +81,7 @@ void socket_broker::read_complete(
     }
     else
     {
+        PacketCounter::getInstance().add(bytes_received);
         auto transactor = [this](
             const uint8_t* data,
             const size_t size
