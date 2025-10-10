@@ -62,16 +62,16 @@
 <br/>
 
 ## 프로젝트 구조
-TTALKKAG/
-├─ broker/
-│  ├─ broker.cpp
-│  ├─ logo_display.cpp
-│  ├─ packet/          # MQTT 컨트롤 패킷, 패킷 파서, 패킷 핸들러
-│  ├─ session/         # 세션, 세션 매니저
-│  ├─ socket/          # 소켓
-│  └─ subscription/    # 구독, 구독 매니저
-├─ client/
-└─ README.md
+TTALKKAG/  
+├─ broker/  
+│  ├─ broker.cpp  
+│  ├─ logo_display.cpp  
+│  ├─ packet/          # MQTT 컨트롤 패킷, 패킷 파서, 패킷 핸들러  
+│  ├─ session/         # 세션, 세션 매니저  
+│  ├─ socket/          # 소켓  
+│  └─ subscription/    # 구독, 구독 매니저  
+├─ client/  
+└─ README.md  
 
 <br/>
 <br/>
